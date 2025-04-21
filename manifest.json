@@ -1,0 +1,19 @@
+{
+  "name": "Pattern Generator",
+  "id": "1496047280525391230",
+  "api": "1.0.0",
+  "main": "code.js",
+  "ui": "ui.html",
+  "editorType": ["figma"],
+  "menu": [
+    {
+      "name": "Generate Background Pattern",
+      "command": "generate-pattern"
+    }
+  ],
+  "documentAccess": "dynamic-page",
+  "permissions": ["currentuser"],
+  "networkAccess": {
+    "allowedDomains": ["none"]
+  }
+}
