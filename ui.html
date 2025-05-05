@@ -263,11 +263,26 @@
       { id: 'DoodleLoops', name: 'Doodle Loops' },
       { id: 'ThinSlashGrid', name: 'Thin Slash Grid' },
       { id: 'ParallelCurves', name: 'Parallel Curves' },
-      { id: 'StarDotCluster', name: 'Star + Dot Cluster' },
-      { id: 'LineLeaf', name: 'Line & Leaf' },
+      { id: 'StarDotCluster', name: 'Star Dot Cluster' },
+      { id: 'LineLeaf', name: 'Line Leaf' },
       { id: 'TearGrid', name: 'Tear Grid' },
       { id: 'EyeSymbols', name: 'Eye Symbols' },
-      { id: 'PuzzleGrid', name: 'Puzzle Grid' }
+      { id: 'PuzzleGrid', name: 'Puzzle Grid' },
+      { id: 'StickyNote', name: 'Sticky Note' },
+      { id: 'Perlin', name: 'Perlin Noise' },
+      { id: 'Marble', name: 'Marble' },
+      { id: 'Mesh', name: 'Mesh' },
+      { id: 'GrainNoise', name: 'Grain Noise' },
+      { id: 'StaticTVDots', name: 'Static TV Dots' },
+      { id: 'SpeckledInk', name: 'Speckled Ink' },
+      { id: 'BlurWaves', name: 'Blur Waves' },
+      { id: 'DustFlecks', name: 'Dust Flecks' },
+      { id: 'PaperCrinkleLines', name: 'Paper Crinkle Lines' },
+      { id: 'SwirlVortex', name: 'Swirl Vortex' },
+      { id: 'TiltedStripes', name: 'Tilted Stripes' },
+      { id: 'StreamLines', name: 'Stream Lines' },
+      { id: 'SineWaves', name: 'Sine Waves' },
+      { id: 'ExpandingCircles', name: 'Expanding Circles' },
     ];
     
     // Get UI elements
@@ -1421,9 +1436,9 @@
         case 'TriangleStack':
           // Triangle Stack preview
           let triangleStack = '<g stroke="#E0E0E0" stroke-width="0.5">';
-          const tsSpacing = 25;
-          for (let x = tsSpacing; x < width; x += tsSpacing) {
-            for (let y = tsSpacing; y < height; y += tsSpacing) {
+          const tsStackSpacing = 25; // Renamed from tsSpacing
+          for (let x = tsStackSpacing; x < width; x += tsStackSpacing) {
+            for (let y = tsStackSpacing; y < height; y += tsStackSpacing) {
               triangleStack += `
                 <polygon points="${x},${y-8} ${x-7},${y+4} ${x+7},${y+4}" fill="#F0F0F0"/>
                 <polygon points="${x},${y-5} ${x-4},${y+2} ${x+4},${y+2}" fill="#E8E8E8"/>
@@ -1554,9 +1569,9 @@
         case 'SpiralLoops':
           // Spiral Loops preview
           let spiralLoops = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
-          const slSpacing = 25;
-          for (let x = slSpacing; x < width; x += slSpacing) {
-            for (let y = slSpacing; y < height; y += slSpacing) {
+          const slLoopSpacing = 25; // Renamed from slSpacing
+          for (let x = slLoopSpacing; x < width; x += slLoopSpacing) {
+            for (let y = slLoopSpacing; y < height; y += slLoopSpacing) {
               let pathD = `M ${x+4} ${y}`;
               for (let angle = 0; angle < Math.PI * 4; angle += 0.2) {
                 const radius = 4 * (1 - angle / (Math.PI * 4));
@@ -2029,6 +2044,248 @@
           }
           puzzleGrid += '</g>';
           pattern = puzzleGrid;
+          break;
+          
+        case 'Perlin':
+          // Perlin Noise Preview (approximated with dots)
+          let perlinDots = '<g fill="#CCCCCC" opacity="0.7">';
+          const pDotCount = 150; // Reasonable density for preview
+          for (let i = 0; i < pDotCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = 0.5 + Math.random() * 1;
+            perlinDots += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+          }
+          perlinDots += '</g>';
+          pattern = perlinDots;
+          break;
+          
+        case 'Marble':
+          // Marble Preview (approximated with wavy lines)
+          let marbleLines = '<g stroke="#D0D0D0" stroke-width="1.5" fill="none" opacity="0.6">';
+          const mLineCount = 6;
+          for (let i = 0; i < mLineCount; i++) {
+            const yOffset = (height / mLineCount) * (i + 0.5);
+            const amplitude = 15 + (Math.random() - 0.5) * 10;
+            const freq = 0.02 + Math.random() * 0.02;
+            let pathD = `M 0 ${yOffset + (Math.random() - 0.5) * 10}`;
+            for (let x = 0; x < width; x += 10) {
+              const y = yOffset + Math.sin(x * freq + i * 0.5) * amplitude;
+              pathD += ` L ${x} ${y}`;
+            }
+            marbleLines += `<path d="${pathD}"/>`;
+          }
+          marbleLines += '</g>';
+          pattern = marbleLines;
+          break;
+          
+        case 'BlurWaves':
+          // Blur Waves Preview (approximated with transparent rects)
+          let blurRects = '<g opacity="0.3">';
+          const bWaveCount = 4;
+          for (let i = 0; i < bWaveCount; i++) {
+            const rectHeight = height * (0.2 + Math.random() * 0.4);
+            const rectWidth = width * (1.2 + Math.random());
+            const x = width * (Math.random() - 0.1);
+            const y = height * Math.random() - rectHeight / 2;
+            const rotation = (Math.random() - 0.5) * 25;
+            const color = "#CCD9E6";
+            blurRects += `<rect x="${x}" y="${y}" width="${rectWidth}" height="${rectHeight}" fill="${color}" transform="rotate(${rotation} ${x + rectWidth/2} ${y + rectHeight/2})" />`;
+          }
+          blurRects += '</g>';
+          pattern = blurRects;
+          break;
+          
+        case 'GrainNoise':
+          // Grain Noise Preview (more dots than main SVG)
+          let grainDots = '<g fill="#808080" opacity="0.5">';
+          const gDotCount = 200; // Higher density for preview
+          for (let i = 0; i < gDotCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = 0.5 + Math.random() * 0.8;
+            grainDots += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+          }
+          grainDots += '</g>';
+          pattern = grainDots;
+          break;
+          
+        case 'StaticTVDots':
+          // Static TV Dots Preview (more dots than main SVG)
+          let staticDots = '<g opacity="0.7">';
+          const sDotCount = 150; // Higher density for preview
+          for (let i = 0; i < sDotCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = 0.8 + Math.random() * 1.2;
+            staticDots += `<circle cx="${x}" cy="${y}" r="${r}" fill="#999999"/>`;
+            if (Math.random() < 0.03) {
+              const lineW = width * (0.1 + Math.random() * 0.3);
+              const lineX = Math.random() * width * 0.7;
+              staticDots += `<rect x="${lineX}" y="${y - 0.5}" width="${lineW}" height="0.8" fill="#FFFFFF" opacity="0.6"/>`;
+            }
+          }
+          staticDots += '</g>';
+          pattern = staticDots;
+          break;
+          
+        case 'SpeckledInk':
+          // Speckled Ink Preview (more dots than main SVG)
+          let inkSpeckles = '<g fill="#333333" opacity="0.8">';
+          const iSpeckleCount = 100; // Higher density for preview
+          for (let i = 0; i < iSpeckleCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = 0.8 + Math.random() * 1.8;
+            inkSpeckles += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+          }
+          inkSpeckles += '</g>';
+          pattern = inkSpeckles;
+          break;
+          
+        case 'DustFlecks':
+          // Dust Flecks Preview (more dots than main SVG)
+          let dustFlecks = '<g fill="#B3B3B3" opacity="0.6">';
+          const dFleckCount = 80; // Higher density for preview
+          for (let i = 0; i < dFleckCount; i++) {
+            const x = Math.random() * width;
+            const y = Math.random() * height;
+            const r = 0.4 + Math.random() * 0.6;
+            dustFlecks += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
+          }
+          dustFlecks += '</g>';
+          pattern = dustFlecks;
+          break;
+          
+        case 'PaperCrinkleLines':
+          // Paper Crinkle Lines preview
+          let paperCrinkleLines = '<g stroke="#D8D8D8" stroke-width="0.7" fill="none">';
+          const pclSpacing = 15;
+          const pclWidth = 8;
+          const pclHeight = 6;
+          
+          for (let y = pclSpacing; y < height; y += pclSpacing) {
+            for (let x = pclSpacing; x < width; x += pclSpacing) {
+              const isHorizontal = (Math.floor(x / pclSpacing) + Math.floor(y / pclSpacing)) % 2 === 0;
+              if (isHorizontal) {
+                paperCrinkleLines += `<path d="M ${x-pclWidth/2} ${y-pclHeight/2} L ${x+pclWidth/2} ${y-pclHeight/2} L ${x+pclWidth/2} ${y+pclHeight/2} L ${x-pclWidth/2} ${y+pclHeight/2} Z" stroke="#D8D8D8" stroke-width="0.7"/>`;
+              } else {
+                paperCrinkleLines += `<path d="M ${x-pclWidth/2} ${y-pclWidth/2} L ${x+pclWidth/2} ${y-pclWidth/2} L ${x+pclWidth/2} ${y+pclWidth/2} L ${x-pclWidth/2} ${y+pclWidth/2} Z" stroke="#D8D8D8" stroke-width="0.7"/>`;
+              }
+            }
+          }
+          paperCrinkleLines += '</g>';
+          pattern = paperCrinkleLines;
+          break;
+          
+        case 'SwirlVortex':
+          // Swirl Vortex preview
+          let swirlVortex = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
+          const svSpacing = 25;
+          for (let x = svSpacing; x < width; x += svSpacing) {
+            for (let y = svSpacing; y < height; y += svSpacing) {
+              let pathD = `M ${x} ${y}`;
+              for (let angle = 0; angle < Math.PI * 4; angle += 0.2) {
+                const radius = 4 * (1 - angle / (Math.PI * 4));
+                const px = x + radius * Math.cos(angle);
+                const py = y + radius * Math.sin(angle);
+                pathD += ` L ${px} ${py}`;
+              }
+              swirlVortex += `<path d="${pathD}" stroke="#E0E0E0" stroke-width="0.7"/>`;
+            }
+          }
+          swirlVortex += '</g>';
+          pattern = swirlVortex;
+          break;
+          
+        case 'TiltedStripes':
+          // Tilted Stripes preview
+          let tiltedStripes = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
+          const tsSpacing = 15;
+          const tsWidth = 8;
+          const tsHeight = 6;
+          
+          for (let y = tsSpacing; y < height; y += tsSpacing) {
+            for (let x = tsSpacing; x < width; x += tsSpacing) {
+              const isHorizontal = (Math.floor(x / tsSpacing) + Math.floor(y / tsSpacing)) % 2 === 0;
+              const variant = isHorizontal ? 0 : 1;
+              const angle = variant === 0 ? Math.PI / 6 : Math.PI / 3; // 30 or 60 degrees
+              
+              const x1 = x - Math.cos(angle) * (tsWidth / 2);
+              const y1 = y - Math.sin(angle) * (tsHeight / 2);
+              const x2 = x + Math.cos(angle) * (tsWidth / 2);
+              const y2 = y + Math.sin(angle) * (tsHeight / 2);
+              
+              tiltedStripes += `<path d="M ${x1} ${y1} L ${x2} ${y2}" stroke="#E0E0E0" stroke-width="0.7"/>`;
+            }
+          }
+          tiltedStripes += '</g>';
+          pattern = tiltedStripes;
+          break;
+          
+        case 'StreamLines':
+          // Stream Lines preview
+          let streamLines = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
+          const slSpacing = 15;
+          const slWidth = 8;
+          const slHeight = 6;
+          
+          for (let y = slSpacing; y < height; y += slSpacing) {
+            for (let x = slSpacing; x < width; x += slSpacing) {
+              const isHorizontal = (Math.floor(x / slSpacing) + Math.floor(y / slSpacing)) % 2 === 0;
+              const variant = isHorizontal ? 0 : 1;
+              const angle = variant === 0 ? Math.PI / 6 : Math.PI / 3; // 30 or 60 degrees
+              
+              const x1 = x - Math.cos(angle) * (slWidth / 2);
+              const y1 = y - Math.sin(angle) * (slHeight / 2);
+              const x2 = x + Math.cos(angle) * (slWidth / 2);
+              const y2 = y + Math.sin(angle) * (slHeight / 2);
+              
+              streamLines += `<path d="M ${x1} ${y1} L ${x2} ${y2}" stroke="#E0E0E0" stroke-width="0.7"/>`;
+            }
+          }
+          streamLines += '</g>';
+          pattern = streamLines;
+          break;
+          
+        case 'SineWaves':
+          // Sine Waves preview
+          let sineWaves = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
+          const swSpacing = 15;
+          const swHeight = 6;
+          const swWidth = 8;
+          
+          for (let y = swSpacing; y < height; y += swSpacing) {
+            for (let x = swSpacing; x < width; x += swSpacing) {
+              const isHorizontal = (Math.floor(x / swSpacing) + Math.floor(y / swSpacing)) % 2 === 0;
+              const variant = isHorizontal ? 0 : 1;
+              const angle = variant === 0 ? Math.PI / 6 : Math.PI / 3; // 30 or 60 degrees
+              
+              const x1 = x - Math.cos(angle) * (swWidth / 2);
+              const y1 = y - Math.sin(angle) * (swHeight / 2);
+              const x2 = x + Math.cos(angle) * (swWidth / 2);
+              const y2 = y + Math.sin(angle) * (swHeight / 2);
+              
+              sineWaves += `<path d="M ${x1} ${y1} L ${x2} ${y2}" stroke="#E0E0E0" stroke-width="0.7"/>`;
+            }
+          }
+          sineWaves += '</g>';
+          pattern = sineWaves;
+          break;
+          
+        case 'ExpandingCircles':
+          // Expanding Circles preview
+          let expandingCircles = '<g stroke="#E0E0E0" stroke-width="0.7" fill="none">';
+          const ecSpacing = 25;
+          const ecRadius = 8;
+          for (let x = ecSpacing; x < width; x += ecSpacing) {
+            for (let y = ecSpacing; y < height; y += ecSpacing) {
+              const radius = Math.sqrt((x - width / 2) ** 2 + (y - height / 2) ** 2);
+              expandingCircles += `<circle cx="${x}" cy="${y}" r="${radius}" stroke="#E0E0E0" stroke-width="0.7"/>`;
+            }
+          }
+          expandingCircles += '</g>';
+          pattern = expandingCircles;
           break;
           
         default:

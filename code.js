@@ -262,28 +262,28 @@ function createFallbackPattern(patternType, frame) {
       case 'Snow': {
         // Create snowflake pattern with simple crosses and dots
         const snowColor = { r: 0.9, g: 0.9, b: 0.9 }; // #E5E5E5
-        const dotSpacing = 40;
+        const snowSpacing = 40; // Renamed from dotSpacing for clarity
         
-        for (let x = dotSpacing; x < frame.width; x += dotSpacing) {
-          for (let y = dotSpacing; y < frame.height; y += dotSpacing) {
-            if ((x/dotSpacing + y/dotSpacing) % 2 === 0) {
+        for (let x = snowSpacing; x < frame.width; x += snowSpacing) {
+          for (let y = snowSpacing; y < frame.height; y += snowSpacing) {
+            if (Math.round(x / snowSpacing + y / snowSpacing) % 2 === 0) { // Use Math.round for robustness
               // Create a snowflake (simple cross)
               const vertLine = figma.createRectangle();
-              vertLine.resize(1, 8);
-              vertLine.x = x - 0.5;
+              vertLine.resize(1.5, 8); // Slightly thicker lines
+              vertLine.x = x - 0.75;
               vertLine.y = y - 4;
               vertLine.fills = [{ type: 'SOLID', color: snowColor }];
               
               const horizLine = figma.createRectangle();
-              horizLine.resize(8, 1);
+              horizLine.resize(8, 1.5); // Slightly thicker lines
               horizLine.x = x - 4;
-              horizLine.y = y - 0.5;
+              horizLine.y = y - 0.75;
               horizLine.fills = [{ type: 'SOLID', color: snowColor }];
               
               frame.appendChild(vertLine);
               frame.appendChild(horizLine);
-              vertLine.name = 'Snow Vertical';
-              horizLine.name = 'Snow Horizontal';
+              vertLine.name = 'Snow Cross Vertical'; // More specific name
+              horizLine.name = 'Snow Cross Horizontal'; // More specific name
               elements.push(vertLine, horizLine);
             } else {
               // Create a dot for variety
@@ -302,242 +302,172 @@ function createFallbackPattern(patternType, frame) {
       }
       
       case 'Stars': {
-        // Create simple star pattern with asterisk-like shapes
-        const starColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-        const starSpacing = 50;
-        
-        for (let x = starSpacing; x < frame.width; x += starSpacing) {
-          for (let y = starSpacing; y < frame.height; y += starSpacing) {
-            // Create star with crossing lines (asterisk style)
-            const starElements = [];
-            
-            // Create the 4 lines of the star (like an asterisk)
+        // SVG: Create simple star pattern with asterisk-like shapes
+        const starsSVG = [];
+        const starSpacingSVG = 50;
+        const lineLength = 10;
+        const strokeWidth = 1.5;
+    
+        for (let x = starSpacingSVG; x < frame.width; x += starSpacingSVG) {
+          for (let y = starSpacingSVG; y < frame.height; y += starSpacingSVG) {
+            // Create 4 lines radiating from the center
             for (let i = 0; i < 4; i++) {
-              const line = figma.createRectangle();
-              line.resize(10, 1);
-              line.x = x - 5;
-              line.y = y - 0.5;
-              line.rotation = i * 45; // 0, 45, 90, 135 degrees
-              line.fills = [{ type: 'SOLID', color: starColor }];
-              frame.appendChild(line);
-              line.name = `Star Line ${i+1}`;
-              starElements.push(line);
+              const angle = i * 45 * (Math.PI / 180); // 0, 45, 90, 135 degrees
+              const x1 = x - (lineLength / 2) * Math.cos(angle);
+              const y1 = y - (lineLength / 2) * Math.sin(angle);
+              const x2 = x + (lineLength / 2) * Math.cos(angle);
+              const y2 = y + (lineLength / 2) * Math.sin(angle);
+              starsSVG.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#E0E0E0" stroke-width="${strokeWidth}"/>`);
             }
-            
-            elements.push(...starElements);
           }
         }
+        pattern = `<g>${starsSVG.join('')}</g>`;
         break;
       }
       
       case 'Crosses': {
-        // Create cross pattern with plus signs
-        const crossColor = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-        const crossSpacing = 45;
-        
-        for (let x = crossSpacing; x < frame.width; x += crossSpacing) {
-          for (let y = crossSpacing; y < frame.height; y += crossSpacing) {
-            // Create cross with vertical and horizontal lines
-            const vertLine = figma.createRectangle();
-            vertLine.resize(2, 12);
-            vertLine.x = x - 1;
-            vertLine.y = y - 6;
-            vertLine.fills = [{ type: 'SOLID', color: crossColor }];
-            
-            const horizLine = figma.createRectangle();
-            horizLine.resize(12, 2);
-            horizLine.x = x - 6;
-            horizLine.y = y - 1;
-            horizLine.fills = [{ type: 'SOLID', color: crossColor }];
-            
-            frame.appendChild(vertLine);
-            frame.appendChild(horizLine);
-            vertLine.name = 'Cross Vertical';
-            horizLine.name = 'Cross Horizontal';
-            elements.push(vertLine, horizLine);
+        // SVG: Create cross pattern with plus signs
+        const crossesSVG = [];
+        const crossSpacingSVG = 45;
+        const crossSize = 12;
+        const crossThickness = 2;
+    
+        for (let x = crossSpacingSVG; x < frame.width; x += crossSpacingSVG) {
+          for (let y = crossSpacingSVG; y < frame.height; y += crossSpacingSVG) {
+            // Vertical line
+            crossesSVG.push(`<rect x="${x - crossThickness / 2}" y="${y - crossSize / 2}" width="${crossThickness}" height="${crossSize}" fill="#D8D8D8"/>`);
+            // Horizontal line
+            crossesSVG.push(`<rect x="${x - crossSize / 2}" y="${y - crossThickness / 2}" width="${crossSize}" height="${crossThickness}" fill="#D8D8D8"/>`);
           }
         }
+        pattern = `<g>${crossesSVG.join('')}</g>`;
         break;
       }
       
       case 'TinyTriangles': {
-        // Create tiny triangles pattern pointing in different directions
-        const triangleColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-        const triangleSpacing = 30;
-        
-        for (let x = triangleSpacing; x < frame.width; x += triangleSpacing) {
-          for (let y = triangleSpacing; y < frame.height; y += triangleSpacing) {
-            // For fallback, we'll use a simple triangle approximation
-            // using a rectangle with rotation
-            const triangle = figma.createRectangle();
-            triangle.resize(6, 6);
-            triangle.x = x - 3;
-            triangle.y = y - 3;
-            
-            // Rotate to different directions based on position
-            const direction = (Math.floor(x / triangleSpacing) + Math.floor(y / triangleSpacing)) % 4;
-            triangle.rotation = direction * 90; // 0, 90, 180, 270 degrees
-            
-            triangle.fills = [{ type: 'SOLID', color: triangleColor }];
-            frame.appendChild(triangle);
-            triangle.name = 'Tiny Triangle';
-            elements.push(triangle);
+        // SVG: Create tiny triangles pattern pointing in different directions
+        const trianglesSVG = [];
+        const triangleSpacingSVG = 30;
+        const triSize = 6; // Size of the triangle base/height
+    
+        for (let x = triangleSpacingSVG; x < frame.width; x += triangleSpacingSVG) {
+          for (let y = triangleSpacingSVG; y < frame.height; y += triangleSpacingSVG) {
+            const direction = (Math.floor(x / triangleSpacingSVG) + Math.floor(y / triangleSpacingSVG)) % 4;
+            let points = "";
+            // Define points based on direction (0: up, 1: right, 2: down, 3: left)
+            const halfSize = triSize / 2;
+            if (direction === 0) points = `${x},${y-halfSize} ${x-halfSize},${y+halfSize} ${x+halfSize},${y+halfSize}`;
+            else if (direction === 1) points = `${x-halfSize},${y-halfSize} ${x+halfSize},${y} ${x-halfSize},${y+halfSize}`;
+            else if (direction === 2) points = `${x-halfSize},${y-halfSize} ${x+halfSize},${y-halfSize} ${x},${y+halfSize}`;
+            else points = `${x+halfSize},${y-halfSize} ${x+halfSize},${y+halfSize} ${x-halfSize},${y}`;
+    
+            trianglesSVG.push(`<polygon points="${points}" fill="#E0E0E0"/>`);
           }
         }
+        pattern = `<g>${trianglesSVG.join('')}</g>`;
         break;
       }
       
       case 'CircleScatter': {
-        // Create scattered circles of different sizes
-        const circleColors = [
-          { r: 0.9, g: 0.9, b: 0.9 }, // #E5E5E5
-          { r: 0.94, g: 0.94, b: 0.94 }, // #F0F0F0
-          { r: 0.88, g: 0.88, b: 0.88 } // #E0E0E0
-        ];
-        
-        // Create circles with different sizes at pseudo-random positions
+        // SVG: Create scattered circles of different sizes
+        const circlesSVG = [];
+        const colorsSVG = ["#E5E5E5", "#F0F0F0", "#E0E0E0"];
+    
         for (let i = 0; i < 50; i++) {
-          // Use deterministic pseudo-random positions
           const x = (((i * 13) % 17) / 17) * frame.width;
           const y = (((i * 19) % 23) / 23) * frame.height;
-          const size = 3 + ((i % 5) * 2);
-          
-          const circle = figma.createEllipse();
-          circle.resize(size, size);
-          circle.x = x - size/2;
-          circle.y = y - size/2;
-          circle.fills = [{ type: 'SOLID', color: circleColors[i % 3] }];
-          frame.appendChild(circle);
-          circle.name = 'Scattered Circle';
-          elements.push(circle);
+          const radius = (3 + ((i % 5) * 2)) / 2;
+          const color = colorsSVG[i % 3];
+          circlesSVG.push(`<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`);
         }
+        pattern = `<g>${circlesSVG.join('')}</g>`;
         break;
       }
       
       case 'HexagonGrid': {
-        // Create honeycomb hex grid pattern
-        const hexColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-        const hexSize = 20;
-        let hexHorizontalSpacing = hexSize * Math.sqrt(3);
-        let hexVerticalSpacing = hexSize * 1.5;
-        
-        // Calculate rows and columns needed
-        let cols = Math.ceil(frame.width / hexHorizontalSpacing) + 1;
-        const rows = Math.ceil(frame.height / hexVerticalSpacing) + 1;
-        
-        for (let row = 0; row < rows; row++) {
-          for (let col = 0; col < cols; col++) {
-            // Calculate center of hexagon
-            const x = col * hexHorizontalSpacing + (row % 2) * (hexHorizontalSpacing/2);
-            const y = row * hexVerticalSpacing;
-            
-            // For fallback, use a circle to approximate a hexagon
-            const hex = figma.createEllipse();
-            hex.resize(hexSize * 1.5, hexSize * 1.5);
-            hex.x = x - hexSize * 0.75;
-            hex.y = y - hexSize * 0.75;
-            
-            // Create a stroke only, no fill
-            hex.fills = [];
-            hex.strokes = [{ type: 'SOLID', color: hexColor }];
-            hex.strokeWeight = 1;
-            
-            frame.appendChild(hex);
-            hex.name = 'Hexagon';
-            elements.push(hex);
+        // SVG: Create honeycomb hex grid pattern
+        const hexagonsSVG = [];
+        const hexSizeSVG = 20;
+        const hexWidth = Math.sqrt(3) * hexSizeSVG;
+        const hexHeight = 2 * hexSizeSVG;
+        const vertSpacing = hexHeight * 3/4;
+    
+        for (let row = 0; row * vertSpacing < frame.height + hexHeight; row++) {
+          for (let col = 0; col * hexWidth < frame.width + hexWidth; col++) {
+            const xOffset = (row % 2) * (hexWidth / 2);
+            const cx = col * hexWidth + xOffset;
+            const cy = row * vertSpacing;
+    
+            const points = [];
+            for (let i = 0; i < 6; i++) {
+              const angle_deg = 60 * i - 30;
+              const angle_rad = Math.PI / 180 * angle_deg;
+              const px = cx + hexSizeSVG * Math.cos(angle_rad);
+              const py = cy + hexSizeSVG * Math.sin(angle_rad);
+              points.push(`${px},${py}`);
+            }
+            hexagonsSVG.push(`<polygon points="${points.join(' ')}" stroke="#E0E0E0" stroke-width="1" fill="none"/>`);
           }
         }
+        pattern = `<g>${hexagonsSVG.join('')}</g>`;
         break;
       }
       
       case 'Chevrons': {
-        // Create chevron pattern (V shapes)
-        const chevronColor = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-        const rowSpacing = 30;
-        
-        for (let y = rowSpacing; y < frame.height; y += rowSpacing) {
-          // Create multiple chevrons in a row
-          for (let x = 0; x < frame.width; x += 20) {
-            // Create a V shape with two lines for each chevron
-            const line1 = figma.createLine();
-            line1.strokeWeight = 1;
-            line1.strokes = [{ type: 'SOLID', color: chevronColor }];
-            line1.resize(10, 0);
-            line1.x = x;
-            line1.y = y;
-            line1.rotation = -45;
-            
-            const line2 = figma.createLine();
-            line2.strokeWeight = 1;
-            line2.strokes = [{ type: 'SOLID', color: chevronColor }];
-            line2.resize(10, 0);
-            line2.x = x + 10;
-            line2.y = y - 7;
-            line2.rotation = 45;
-            
-            frame.appendChild(line1);
-            frame.appendChild(line2);
-            line1.name = 'Chevron Left';
-            line2.name = 'Chevron Right';
-            elements.push(line1, line2);
+        // SVG: Create chevron pattern (V shapes)
+        const chevronsSVG = [];
+        const chevronRowSpacing = 30;
+        const chevronWidth = 14; // Width of the V
+        const chevronHeight = 10; // Height of the V
+        const chevronSpacingX = 20;
+    
+        for (let y = chevronRowSpacing; y < frame.height; y += chevronRowSpacing) {
+          for (let x = chevronSpacingX / 2; x < frame.width; x += chevronSpacingX) {
+            const points = `${x - chevronWidth / 2},${y + chevronHeight / 2} ${x},${y - chevronHeight / 2} ${x + chevronWidth / 2},${y + chevronHeight / 2}`;
+            chevronsSVG.push(`<polyline points="${points}" stroke="#D8D8D8" stroke-width="1.5" fill="none"/>`);
           }
         }
+        pattern = `<g>${chevronsSVG.join('')}</g>`;
         break;
       }
       
       case 'SquareTiles': {
-        // Create square tile pattern
-        const squareColor = { r: 0.9, g: 0.9, b: 0.9 }; // #E5E5E5
-        const tileSize = 30;
-        const spacing = 40;
-        
-        for (let x = spacing/2; x < frame.width; x += spacing) {
-          for (let y = spacing/2; y < frame.height; y += spacing) {
-            const square = figma.createRectangle();
-            square.resize(tileSize, tileSize);
-            square.x = x - tileSize/2;
-            square.y = y - tileSize/2;
-            
-            // Create squares with stroke only, no fill
-            square.fills = [];
-            square.strokes = [{ type: 'SOLID', color: squareColor }];
-            square.strokeWeight = 1;
-            
-            frame.appendChild(square);
-            square.name = 'Square Tile';
-            elements.push(square);
+        // SVG: Create square tile pattern
+        const squaresSVG = [];
+        const tileSizeSVG = 30;
+        const tileSpacingSVG = 40;
+    
+        for (let x = tileSpacingSVG / 2; x < frame.width; x += tileSpacingSVG) {
+          for (let y = tileSpacingSVG / 2; y < frame.height; y += tileSpacingSVG) {
+            squaresSVG.push(`<rect x="${x - tileSizeSVG / 2}" y="${y - tileSizeSVG / 2}" width="${tileSizeSVG}" height="${tileSizeSVG}" stroke="#E5E5E5" stroke-width="1" fill="none"/>`);
           }
         }
+        pattern = `<g>${squaresSVG.join('')}</g>`;
         break;
       }
       
       case 'WaveDots': {
-        // Create wave dots pattern
-        const dotColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-        const waveHorizontalSpacing = 20;
-        const amplitude = 10;
-        const waveVerticalSpacing = 30;
-        
-        for (let row = 0; row < frame.height / waveVerticalSpacing + 1; row++) {
-          for (let col = 0; col < frame.width / waveHorizontalSpacing + 1; col++) {
-            const x = col * waveHorizontalSpacing;
-            // Create a sine wave pattern
-            const y = row * waveVerticalSpacing + Math.sin(col * 0.5) * amplitude;
-            
-            const dot = figma.createEllipse();
-            dot.resize(4, 4);
-            dot.x = x - 2;
-            dot.y = y - 2;
-            dot.fills = [{ type: 'SOLID', color: dotColor }];
-            frame.appendChild(dot);
-            dot.name = 'Wave Dot';
-            elements.push(dot);
+        // SVG: Create wave dots pattern
+        const waveDotsSVG = [];
+        const waveHSpacing = 20;
+        const waveAmp = 10;
+        const waveVSpacing = 30;
+        const dotRadius = 2;
+    
+        for (let row = 0; row * waveVSpacing < frame.height + waveAmp; row++) {
+          for (let col = 0; col * waveHSpacing < frame.width; col++) {
+            const x = col * waveHSpacing;
+            const y = row * waveVSpacing + Math.sin(col * 0.5) * waveAmp;
+            if (y > -dotRadius && y < frame.height + dotRadius) { // Only draw if potentially visible
+                waveDotsSVG.push(`<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="#E0E0E0"/>`);
+            }
           }
         }
+        pattern = `<g>${waveDotsSVG.join('')}</g>`;
         break;
       }
       
-      case 'ConcentricCircles':
+      case 'ConcentricCircles': {
         // Concentric circles pattern
         const concentricCircles = [];
         const ccSpacing = 70;
@@ -562,7 +492,8 @@ function createFallbackPattern(patternType, frame) {
           </g>
         `;
         break;
-        
+      }
+      
       case 'ThinXMarks':
         // Thin X marks pattern
         const xMarks = [];
@@ -2238,7 +2169,7 @@ function createFallbackPattern(patternType, frame) {
         `;
         break;
 
-      case 'StarDotCluster':
+      case 'StarDotCluster': { // <-- Added opening brace
         // Star + Dot Cluster pattern
         const starDotCluster = [];
         const sdcSpacing = 50; // Increased spacing
@@ -2267,8 +2198,9 @@ function createFallbackPattern(patternType, frame) {
           </g>
         `;
         break;
+      } // <-- Added closing brace
 
-      case 'LineLeaf':
+      case 'LineLeaf': { // <-- Added opening brace
         // Line & Leaf pattern
         const lineLeaf = [];
         const llLineSpacing = 25; // Increased spacing
@@ -2292,8 +2224,9 @@ function createFallbackPattern(patternType, frame) {
             </g>
           `;
           break;
+       } // <-- Added closing brace
 
-      case 'TearGrid':
+      case 'TearGrid': { // <-- Added opening brace
         // Tear Grid pattern
         const tearGrid = [];
         const tgSpacing = 25; // Increased spacing
@@ -2313,8 +2246,9 @@ function createFallbackPattern(patternType, frame) {
           </g>
         `;
         break;
+      } // <-- Added closing brace
 
-      case 'EyeSymbols':
+      case 'EyeSymbols': { // <-- Added opening brace
         // Eye Symbols pattern
         const eyeSymbols = [];
         const eyeCount = Math.ceil((frame.width * frame.height) / (60*60)); // Adjust count based on area
@@ -2344,66 +2278,388 @@ function createFallbackPattern(patternType, frame) {
           </g>
         `;
         break;
+      } // <-- Added closing brace
 
-      case 'PuzzleGrid':
+      case 'PuzzleGrid': { // <-- Added opening brace
         // Puzzle Grid pattern
         const puzzleGrid = [];
-        const pzSize = 40; // Increased size
+        const pzSize = 40; // Size of each puzzle piece
 
         for (let row = 0; row < Math.ceil(frame.height / pzSize); row++) {
           for (let col = 0; col < Math.ceil(frame.width / pzSize); col++) {
             const x = col * pzSize;
             const y = row * pzSize;
             
-            // Define nub positions (0:none, 1:out, -1:in)
-            const topNub = (row > 0) ? -((col + row*2) % 3 - 1) : 0;
-            const rightNub = (col < Math.ceil(frame.width / pzSize) - 1) ? ((col*2 + row) % 3 - 1) : 0;
-            const bottomNub = (row < Math.ceil(frame.height / pzSize) - 1) ? ((col + row*2) % 3 - 1) : 0;
-            const leftNub = (col > 0) ? -((col*2 + row) % 3 - 1) : 0;
+            // Define nub positions (0:none, 1:out, -1:in) pseudo-randomly based on pos
+            const topNub = (row > 0) ? (((col + row*3) % 3) - 1) : 0;
+            const rightNub = (col < Math.ceil(frame.width / pzSize) - 1) ? (((col*3 + row) % 3) - 1) : 0;
+            const bottomNub = (row < Math.ceil(height / pzSize) - 1) ? -topNub : 0; // Ensure matching nub
+            const leftNub = (col > 0) ? -((((col-1)*3 + row) % 3) - 1) : 0; // Ensure matching nub from left
+
+            const nW = pzSize * 0.2; // Nub width based on piece size
+            const nH = pzSize * 0.15; // Nub height based on piece size
+            const c = 0.551915 * nH * 0.5; // Control point calculation factor for circular nub approx
 
             let pathD = `M ${x} ${y}`;
-            // Top edge
-            pathD += ` h ${pzSize*0.35}`;
+
+            // Top Edge
+            pathD += ` l ${pzSize*0.35} 0`;
             if (topNub !== 0) {
-              pathD += ` c 0 ${topNub*pzSize*0.15} ${pzSize*0.1} ${topNub*pzSize*0.2} ${pzSize*0.15} ${topNub*pzSize*0.2}`;
-              pathD += ` s ${pzSize*0.15} ${-topNub*pzSize*0.05} ${pzSize*0.15} 0`;
-              pathD += ` c ${pzSize*0.05} 0 ${pzSize*0.15} ${-topNub*pzSize*0.2} ${pzSize*0.15} ${-topNub*pzSize*0.2}`;
+              pathD += ` l 0 ${-topNub*nH*0.5}`; // Start of nub curve
+              pathD += ` c ${nW*0.25} ${-topNub*nH*0.4} ${nW*0.75} ${-topNub*nH*0.4} ${nW} 0`; // Nub arc
+              pathD += ` l 0 ${topNub*nH*0.5}`; // End of nub curve
             }
-            pathD += ` h ${pzSize*0.35}`;
-            // Right edge
-            pathD += ` v ${pzSize*0.35}`;
+            pathD += ` l ${pzSize*0.35} 0`; // To top-right corner
+
+            // Right Edge
+            pathD += ` l 0 ${pzSize*0.35}`;
              if (rightNub !== 0) {
-              pathD += ` c ${rightNub*pzSize*0.15} 0 ${rightNub*pzSize*0.2} ${pzSize*0.1} ${rightNub*pzSize*0.2} ${pzSize*0.15}`;
-              pathD += ` s ${-rightNub*pzSize*0.05} ${pzSize*0.15} 0 ${pzSize*0.15}`;
-              pathD += ` c 0 ${pzSize*0.05} ${-rightNub*pzSize*0.2} ${pzSize*0.15} ${-rightNub*pzSize*0.2} ${pzSize*0.15}`;
+              pathD += ` l ${rightNub*nH*0.5} 0`;
+              pathD += ` c ${rightNub*nH*0.4} ${nW*0.25} ${rightNub*nH*0.4} ${nW*0.75} 0 ${nW}`;
+              pathD += ` l ${-rightNub*nH*0.5} 0`;
             }
-            pathD += ` v ${pzSize*0.35}`;
-            // Bottom edge
-            pathD += ` h ${-pzSize*0.35}`;
+            pathD += ` l 0 ${pzSize*0.35}`; // To bottom-right corner
+
+            // Bottom Edge
+            pathD += ` l ${-pzSize*0.35} 0`;
              if (bottomNub !== 0) {
-              pathD += ` c 0 ${bottomNub*pzSize*0.15} ${-pzSize*0.1} ${bottomNub*pzSize*0.2} ${-pzSize*0.15} ${bottomNub*pzSize*0.2}`;
-              pathD += ` s ${-pzSize*0.15} ${-bottomNub*pzSize*0.05} ${-pzSize*0.15} 0`;
-              pathD += ` c ${-pzSize*0.05} 0 ${-pzSize*0.15} ${-bottomNub*pzSize*0.2} ${-pzSize*0.15} ${-bottomNub*pzSize*0.2}`;
+              pathD += ` l 0 ${bottomNub*nH*0.5}`;
+              pathD += ` c ${-nW*0.25} ${bottomNub*nH*0.4} ${-nW*0.75} ${bottomNub*nH*0.4} ${-nW} 0`;
+              pathD += ` l 0 ${-bottomNub*nH*0.5}`;
             }
-            pathD += ` h ${-pzSize*0.35}`;
-            // Left edge
-            pathD += ` v ${-pzSize*0.35}`;
+            pathD += ` l ${-pzSize*0.35} 0`; // To bottom-left corner
+
+            // Left Edge
+            pathD += ` l 0 ${-pzSize*0.35}`;
             if (leftNub !== 0) {
-              pathD += ` c ${leftNub*pzSize*0.15} 0 ${leftNub*pzSize*0.2} ${-pzSize*0.1} ${leftNub*pzSize*0.2} ${-pzSize*0.15}`;
-              pathD += ` s ${-leftNub*pzSize*0.05} ${-pzSize*0.15} 0 ${-pzSize*0.15}`;
-              pathD += ` c 0 ${-pzSize*0.05} ${-leftNub*pzSize*0.2} ${-pzSize*0.15} ${-leftNub*pzSize*0.2} ${-pzSize*0.15}`;
+              pathD += ` l ${-leftNub*nH*0.5} 0`;
+              pathD += ` c ${-leftNub*nH*0.4} ${-nW*0.25} ${-leftNub*nH*0.4} ${-nW*0.75} 0 ${-nW}`;
+              pathD += ` l ${leftNub*nH*0.5} 0`;
             }
-            pathD += ` Z`;
+            pathD += ` Z`; // Close path (back to top-left)
 
             puzzleGrid.push(`<path d="${pathD}" stroke="#E0E0E0" stroke-width="1" fill="#F0F0F0"/>`);
           }
         }
         pattern = `
           <g>
-            ${puzzleGrid.join('\\n')}
+            ${puzzleGrid.join('')}
           </g>
         `;
         break;
+      } // <-- Added closing brace
+
+      // ------------------- NEW PATTERNS START (Batch 2) -------------------
+
+      // Visual Texture / Noise
+      case 'GrainNoise': {
+        // Generate SVG for Grain Noise using small, semi-transparent circles
+        const grains = [];
+        const numGrains = Math.floor((frame.width * frame.height) / 150); // Further reduced density
+        for (let i = 0; i < numGrains; i++) {
+          const x = Math.random() * frame.width;
+          const y = Math.random() * frame.height;
+          const r = 0.5 + Math.random() * 1;
+          const opacity = 0.05 + Math.random() * 0.15;
+          grains.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#808080" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${grains.join('\n')}</g>`;
+        break;
+      }
+
+      case 'StaticTVDots': {
+        // Generate SVG for Static TV Dots with random dots and occasional lines
+        const elements = [];
+        const numDots = Math.floor((frame.width * frame.height) / 200); // Further reduced density
+        for (let i = 0; i < numDots; i++) {
+          const x = Math.random() * frame.width;
+          const y = Math.random() * frame.height;
+          const r = 1 + Math.random() * 1.5;
+          const opacity = 0.1 + Math.random() * 0.6;
+          elements.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#999999" fill-opacity="${opacity}"/>`);
+          // Add occasional horizontal line artifact
+          if (Math.random() < 0.02) {
+            const lineWidth = frame.width * (0.1 + Math.random() * 0.4);
+            const lineX = Math.random() * frame.width * 0.6;
+            elements.push(`<rect x="${lineX}" y="${y - 0.5}" width="${lineWidth}" height="1" fill="#FFFFFF" fill-opacity="0.4"/>`);
+          }
+        }
+        pattern = `<g>${elements.join('\n')}</g>`;
+        break;
+      }
+
+      case 'SpeckledInk': {
+        // Generate SVG for Speckled Ink with varying dot sizes
+        const speckles = [];
+        const numSpeckles = Math.floor((frame.width * frame.height) / 300); // Further reduced density
+        for (let i = 0; i < numSpeckles; i++) {
+          const x = Math.random() * frame.width;
+          const y = Math.random() * frame.height;
+          const r = 1 + Math.random() * 2; // Size variation
+          const opacity = 0.2 + Math.random() * 0.7;
+          speckles.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#333333" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${speckles.join('\n')}</g>`;
+        break;
+      }
+
+      case 'BlurWaves': {
+         // Generate SVG for Blur Waves using feGaussianBlur filter
+         const waves = [];
+         const numWaves = 5; // Fewer waves for SVG performance
+         waves.push(`<defs><filter id="blurFilter"><feGaussianBlur stdDeviation="8" /></filter></defs>`);
+         waves.push(`<g filter="url(#blurFilter)">`);
+         for (let i = 0; i < numWaves; i++) {
+           const waveHeight = frame.height * (0.1 + Math.random() * 0.3);
+           const waveWidth = frame.width * (1.5 + Math.random());
+           const x = frame.width * (Math.random() - 0.25);
+           const y = frame.height * Math.random() - waveHeight / 2;
+           const rotation = (Math.random() - 0.5) * 30;
+           const opacity = 0.3 + Math.random() * 0.3; // Slightly higher opacity for blur
+           const color = `rgba(204, 217, 230, ${opacity})`; // #CCD9E6 with opacity
+           waves.push(`<rect x="${x}" y="${y}" width="${waveWidth}" height="${waveHeight}" fill="${color}" transform="rotate(${rotation} ${x + waveWidth/2} ${y + waveHeight/2})" />`);
+         }
+         waves.push(`</g>`);
+         pattern = waves.join('\n');
+        break;
+      }
+
+      case 'DustFlecks': {
+        // Generate SVG for Dust Flecks - very small, sparse dots
+        const flecks = [];
+        const numFlecks = Math.floor((frame.width * frame.height) / 400); // Further reduced density
+        for (let i = 0; i < numFlecks; i++) {
+          const x = Math.random() * frame.width;
+          const y = Math.random() * frame.height;
+          const r = 0.4 + Math.random() * 0.8; // Smaller size
+          const opacity = 0.1 + Math.random() * 0.4;
+          flecks.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#B3B3B3" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${flecks.join('\n')}</g>`;
+        break;
+      }
+
+      case 'PaperCrinkleLines': {
+        // Generate SVG for Paper Crinkle Lines using slightly randomized paths
+        const lines = [];
+        const numLines = 15;
+        for (let i = 0; i < numLines; i++) {
+          const numPoints = 5 + Math.floor(Math.random() * 10);
+          const startX = Math.random() * frame.width;
+          const startY = Math.random() * frame.height;
+          const endX = startX + (Math.random() - 0.5) * frame.width * 0.4;
+          const endY = startY + (Math.random() - 0.5) * frame.height * 0.4;
+          let pathD = `M ${startX} ${startY}`;
+          for (let j = 1; j < numPoints; j++) {
+            const t = j / (numPoints - 1);
+            const currentX = startX + (endX - startX) * t + (Math.random() - 0.5) * 20;
+            const currentY = startY + (endY - startY) * t + (Math.random() - 0.5) * 20;
+            pathD += ` L ${currentX} ${currentY}`;
+          }
+          const strokeWidth = 0.4 + Math.random() * 0.6;
+          const opacity = 0.3 + Math.random() * 0.4;
+          lines.push(`<path d="${pathD}" stroke="#D9D9D9" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${lines.join('\n')}</g>`;
+        break;
+      }
+
+      // Motion / Flow
+      case 'SwirlVortex': {
+        // Generate SVG for Swirl Vortex using spiral paths
+        const arms = [];
+        const numArms = 3 + Math.floor(Math.random() * 3);
+        const centerX = frame.width / 2;
+        const centerY = frame.height / 2;
+        const maxRadius = Math.min(frame.width, frame.height) * 0.5;
+
+        for (let i = 0; i < numArms; i++) {
+          const pointsPerArm = 40;
+          const angleOffset = (i / numArms) * Math.PI * 2;
+          const twistFactor = 5 + Math.random() * 5;
+          let pathD = `M ${centerX} ${centerY}`;
+          for (let j = 1; j < pointsPerArm; j++) {
+            const radius = (j / pointsPerArm) * maxRadius;
+            const angle = angleOffset + (j / pointsPerArm) * twistFactor;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            pathD += ` L ${x} ${y}`;
+          }
+          const strokeWidth = 0.5 + Math.random() * 1.5;
+          const opacity = 0.5 + Math.random() * 0.3;
+          arms.push(`<path d="${pathD}" stroke="#CCCCCC" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${arms.join('\n')}</g>`;
+        break;
+      }
+
+      case 'TiltedStripes': {
+        // Generate SVG for Tilted Stripes using rotated rects
+        const stripes = [];
+        const numStripes = 25;
+        const stripeWidth = 4;
+        const stripeLength = Math.max(frame.width, frame.height) * 1.5;
+        for (let i = 0; i < numStripes; i++) {
+          const centerX = frame.width / 2;
+          const centerY = frame.height * ( (i+0.5) / numStripes );
+          const x = centerX - stripeLength / 2;
+          const y = centerY - stripeWidth / 2;
+          const rotation = 30 + (Math.random() - 0.5) * 20; // Base tilt + variation
+          stripes.push(`<rect x="${x}" y="${y}" width="${stripeLength}" height="${stripeWidth}" fill="#E0E0E0" transform="rotate(${rotation} ${centerX} ${centerY})"/>`);
+        }
+        pattern = `<g>${stripes.join('\n')}</g>`;
+        break;
+      }
+
+      case 'StreamLines': {
+        // Generate SVG for Stream Lines using curved paths
+        const lines = [];
+        const numLines = 12;
+        for (let i = 0; i < numLines; i++) {
+          const startY = (i / numLines) * frame.height * 1.1 - frame.height * 0.05;
+          const endY = startY + (Math.random() - 0.5) * frame.height * 0.4;
+          const midX1 = frame.width * (0.2 + Math.random() * 0.2);
+          const midY1 = startY + (Math.random() - 0.5) * frame.height * 0.3;
+          const midX2 = frame.width * (0.6 + Math.random() * 0.2);
+          const midY2 = startY + (Math.random() - 0.5) * frame.height * 0.3;
+          const startX = -frame.width * 0.05;
+          const endX = frame.width * 1.05;
+          const cp1X = startX + (midX1 - startX) * 1.5;
+          const cp1Y = startY + (midY1 - startY) * 1.5;
+          const cp2X = endX + (midX2 - endX) * 1.5;
+          const cp2Y = endY + (midY2 - endY) * 1.5;
+
+          const pathD = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
+          const strokeWidth = 0.5 + Math.random() * 1;
+          const opacity = 0.4 + Math.random() * 0.4;
+          lines.push(`<path d="${pathD}" stroke="#CCD9E6" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${lines.join('\n')}</g>`;
+        break;
+      }
+
+      case 'SineWaves': {
+        // Generate SVG for Sine Waves using path elements
+        const waves = [];
+        const numWaves = Math.ceil(frame.height / 25);
+        const amplitude = 8;
+        const frequency = 0.04;
+
+        for (let i = 0; i < numWaves; i++) {
+          const yOffset = (i + 0.5) * 25;
+          let pathD = `M 0 ${yOffset + Math.sin(0 + i * 0.5) * amplitude}`;
+          const pointsPerWave = Math.ceil(frame.width / 8);
+          for (let j = 1; j <= pointsPerWave; j++) {
+             const x = (j / pointsPerWave) * frame.width;
+             const y = yOffset + Math.sin(x * frequency + i * 0.5) * amplitude;
+             pathD += ` L ${x} ${y}`;
+          }
+          waves.push(`<path d="${pathD}" stroke="#D9D9D9" stroke-width="1" fill="none"/>`);
+        }
+        pattern = `<g>${waves.join('\n')}</g>`;
+        break;
+      }
+
+      case 'ExpandingCircles': {
+        // Generate SVG for Expanding Circles
+        const sets = [];
+        const numSets = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numSets; i++) {
+          const centerX = frame.width * (0.1 + Math.random() * 0.8);
+          const centerY = frame.height * (0.1 + Math.random() * 0.8);
+          const maxRadius = 30 + Math.random() * 40;
+          const numCircles = 5 + Math.floor(Math.random() * 4);
+          for (let j = 0; j < numCircles; j++) {
+            const radius = ( (j+1) / numCircles ) * maxRadius;
+            const strokeWidth = 0.5 + Math.random();
+            const opacity = 1 - (j / numCircles) * 0.7; // Fade out
+            sets.push(`<circle cx="${centerX}" cy="${centerY}" r="${radius}" stroke="#E5E5E5" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+          }
+        }
+        pattern = `<g>${sets.join('\n')}</g>`;
+        break;
+      }
+
+      // ------------------- NEW PATTERNS END (Batch 2) -------------------
+
+      case 'StickyNote': {
+        const notes = [];
+        const noteSize = 60;
+        const spacing = noteSize * 0.8;
+        const colors = ["#FDF8B4", "#E0E0E0"]; // Yellowish, Grayish
+        for (let row = 0; row * spacing < frame.height + noteSize; row++) {
+          for (let col = 0; col * spacing < frame.width + noteSize; col++) {
+            const x = col * spacing + (Math.random() - 0.5) * 10 - noteSize / 2;
+            const y = row * spacing + (Math.random() - 0.5) * 10 - noteSize / 2;
+            const rotation = (Math.random() - 0.5) * 15;
+            notes.push(`
+              <rect x="${x}" y="${y}" width="${noteSize}" height="${noteSize}" 
+                    rx="4" ry="4" 
+                    fill="${colors[(row + col) % 2]}" fill-opacity="0.8" 
+                    stroke="#B0B0B0" stroke-width="0.5" stroke-opacity="0.5" 
+                    transform="rotate(${rotation} ${x + noteSize/2} ${y + noteSize/2})"/>
+            `);
+          }
+        }
+        pattern = `<g>${notes.join('\\n')}</g>`;
+        break;
+      }
+      case 'Perlin': {
+        // Use feTurbulence for Perlin noise effect - Simplified SVG, rely on fallback
+        pattern = `
+          <rect width="100%" height="100%" fill="#F0F0F0" />
+          <text x="10" y="20" font-size="10" fill="#AAAAAA">Perlin Noise (Fallback)</text>
+        `; // Placeholder SVG
+        break;
+      }
+      case 'Marble': {
+        // Use turbulence + displacement for marble effect - Simplified SVG, rely on fallback
+        pattern = `
+          <rect width="100%" height="100%" fill="#E5E5E5" />
+          <line x1="10" y1="10" x2="${frame.width - 10}" y2="${frame.height - 10}" stroke="#CCCCCC" stroke-width="2"/>
+          <line x1="10" y1="${frame.height - 10}" x2="${frame.width - 10}" y2="10" stroke="#CCCCCC" stroke-width="2"/>
+          <text x="10" y="20" font-size="10" fill="#AAAAAA">Marble (Fallback)</text>
+        `; // Placeholder SVG
+        break;
+      }
+      case 'Mesh': {
+        const meshLines = [];
+        const gridSize = 80; // Further increased grid size
+        const distortion = 8; // Further reduced distortion
+
+        // Horizontal lines
+        for (let y = 0; y <= frame.height; y += gridSize) {
+          let pathD = `M 0 ${y + (Math.random() - 0.5) * distortion}`;
+          for (let x = gridSize; x <= frame.width; x += gridSize) {
+            const currentY = y + (Math.random() - 0.5) * distortion;
+            const prevX = x - gridSize;
+            const prevY = parseFloat(pathD.substring(pathD.lastIndexOf(' ')+1)); // Risky, assumes last point Y
+            const cp1X = prevX + gridSize * 0.3;
+            const cp1Y = prevY + (Math.random() - 0.5) * distortion * 0.5;
+            const cp2X = x - gridSize * 0.3;
+            const cp2Y = currentY + (Math.random() - 0.5) * distortion * 0.5;
+            pathD += ` C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${x} ${currentY}`;
+          }
+          meshLines.push(`<path d="${pathD}" stroke="#C8C8C8" stroke-width="0.8" fill="none"/>`);
+        }
+        // Vertical lines
+         for (let x = 0; x <= frame.width; x += gridSize) {
+           let pathD = `M ${x + (Math.random() - 0.5) * distortion} 0`;
+           for (let y = gridSize; y <= frame.height; y += gridSize) {
+             const currentX = x + (Math.random() - 0.5) * distortion;
+             const prevY = y - gridSize;
+             const prevX = parseFloat(pathD.substring(pathD.lastIndexOf(' ')+1)); // Risky, assumes last point X
+             const cp1X = prevX + (Math.random() - 0.5) * distortion * 0.5;
+             const cp1Y = prevY + gridSize * 0.3;
+             const cp2X = currentX + (Math.random() - 0.5) * distortion * 0.5;
+             const cp2Y = y - gridSize * 0.3;
+             pathD += ` C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${currentX} ${y}`;
+           }
+           meshLines.push(`<path d="${pathD}" stroke="#C8C8C8" stroke-width="0.8" fill="none"/>`);
+         }
+        pattern = `<g>${meshLines.join('\\n')}</g>`;
+        break;
+      }
 
       default: {
         // Default to grid pattern
@@ -2435,7 +2691,7 @@ function generateSVG(patternType, width, height) {
   let pattern = '';
   
   switch (patternType) {
-    case 'Grid':
+    case 'Grid': { // <-- Added opening brace
       // Simple grid pattern with direct lines (no pattern element)
       pattern = `
         <g stroke="#DADADA" stroke-width="1">
@@ -2448,8 +2704,9 @@ function generateSVG(patternType, width, height) {
         </g>
       `;
       break;
+    } // <-- Added closing brace
       
-    case 'Dots':
+    case 'Dots': { // <-- Added opening brace
       // Direct dots rather than using a pattern
       pattern = `
         <g fill="#E0E0E0">
@@ -2465,7 +2722,8 @@ function generateSVG(patternType, width, height) {
       `;
       break;
       
-    case 'Circles':
+    } // <-- Added closing brace
+    case 'Circles': { // <-- Added opening brace
       // Direct circles without pattern
       pattern = `
         <g>
@@ -2484,7 +2742,8 @@ function generateSVG(patternType, width, height) {
       `;
       break;
       
-    case 'Waves':
+    } // <-- Added closing brace
+    case 'Waves': { // <-- Added opening brace
       // Direct wave lines
       pattern = `
         <g>
@@ -2503,7 +2762,7 @@ function generateSVG(patternType, width, height) {
         </g>
       `;
       break;
-      
+    } // <-- Added closing brace
     case 'Lines':
       // Create diagonal lines (simplified)
       const lineColor1 = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
@@ -2542,7 +2801,7 @@ function generateSVG(patternType, width, height) {
       elements.push(stripe1, stripe2, stripe3);
       break;
       
-    case 'AbstractWaves':
+    case 'AbstractWaves': { // <-- Added opening brace
       // Create abstract wave patterns
       const waveColor1 = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
       const waveColor2 = { r: 0.91, g: 0.91, b: 0.91 }; // #E8E8E8
@@ -2562,278 +2821,203 @@ function generateSVG(patternType, width, height) {
         elements.push(wave);
       }
       break;
+    } // <-- Added closing brace
       
     case 'Snow':
-      // Create snowflake pattern with simple crosses and dots
-      const snowColor = { r: 0.9, g: 0.9, b: 0.9 }; // #E5E5E5
-      const dotSpacing = 40;
-      
-      for (let x = dotSpacing; x < width; x += dotSpacing) {
-        for (let y = dotSpacing; y < height; y += dotSpacing) {
-          if ((x/dotSpacing + y/dotSpacing) % 2 === 0) {
-            // Create a snowflake (simple cross)
-            const vertLine = figma.createRectangle();
-            vertLine.resize(1, 8);
-            vertLine.x = x - 0.5;
-            vertLine.y = y - 4;
-            vertLine.fills = [{ type: 'SOLID', color: snowColor }];
-            
-            const horizLine = figma.createRectangle();
-            horizLine.resize(8, 1);
-            horizLine.x = x - 4;
-            horizLine.y = y - 0.5;
-            horizLine.fills = [{ type: 'SOLID', color: snowColor }];
-            
-            frame.appendChild(vertLine);
-            frame.appendChild(horizLine);
-            vertLine.name = 'Snow Vertical';
-            horizLine.name = 'Snow Horizontal';
-            elements.push(vertLine, horizLine);
+      // Create snowflake pattern with crosses and dots
+      const snowMarks = [];
+      const snowSpacing = 40;
+      const crossSize = 4; // Half-size of the cross lines
+      const dotRadius = 1.5;
+
+      for (let x = snowSpacing; x < width; x += snowSpacing) {
+        for (let y = snowSpacing; y < height; y += snowSpacing) {
+          if (Math.round(x / snowSpacing + y / snowSpacing) % 2 === 0) {
+            // Simple cross
+            snowMarks.push(`
+              <line x1="${x - crossSize}" y1="${y}" x2="${x + crossSize}" y2="${y}" stroke="#E5E5E5" stroke-width="1.5"/>
+              <line x1="${x}" y1="${y - crossSize}" x2="${x}" y2="${y + crossSize}" stroke="#E5E5E5" stroke-width="1.5"/>
+            `);
           } else {
-            // Create a dot for variety
-            const dot = figma.createEllipse();
-            dot.resize(3, 3);
-            dot.x = x - 1.5;
-            dot.y = y - 1.5;
-            dot.fills = [{ type: 'SOLID', color: snowColor }];
-            frame.appendChild(dot);
-            dot.name = 'Snow Dot';
-            elements.push(dot);
+            // Simple dot
+            snowMarks.push(`<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="#E5E5E5"/>`);
           }
         }
       }
+      pattern = `
+        <g>
+          ${snowMarks.join('')}
+        </g>
+      `;
       break;
       
-    case 'Stars':
-      // Create simple star pattern with asterisk-like shapes
-      const starColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-      const starSpacing = 50;
-      
-      for (let x = starSpacing; x < width; x += starSpacing) {
-        for (let y = starSpacing; y < height; y += starSpacing) {
-          // Create star with crossing lines (asterisk style)
-          const starElements = [];
-          
-          // Create the 4 lines of the star (like an asterisk)
+    case 'Stars': { // <-- Added opening brace
+      // SVG: Create simple star pattern with asterisk-like shapes
+      const starsSVG = [];
+      const starSpacingSVG = 50;
+      const lineLength = 10;
+      const strokeWidth = 1.5;
+  
+      for (let x = starSpacingSVG; x < width; x += starSpacingSVG) {
+        for (let y = starSpacingSVG; y < height; y += starSpacingSVG) {
+          // Create 4 lines radiating from the center
           for (let i = 0; i < 4; i++) {
-            const line = figma.createRectangle();
-            line.resize(10, 1);
-            line.x = x - 5;
-            line.y = y - 0.5;
-            line.rotation = i * 45; // 0, 45, 90, 135 degrees
-            line.fills = [{ type: 'SOLID', color: starColor }];
-            frame.appendChild(line);
-            line.name = `Star Line ${i+1}`;
-            starElements.push(line);
+            const angle = i * 45 * (Math.PI / 180); // 0, 45, 90, 135 degrees
+            const x1 = x - (lineLength / 2) * Math.cos(angle);
+            const y1 = y - (lineLength / 2) * Math.sin(angle);
+            const x2 = x + (lineLength / 2) * Math.cos(angle);
+            const y2 = y + (lineLength / 2) * Math.sin(angle);
+            starsSVG.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="#E0E0E0" stroke-width="${strokeWidth}"/>`);
           }
-          
-          elements.push(...starElements);
         }
       }
+      pattern = `<g>${starsSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'Crosses':
-      // Create cross pattern with plus signs
-      const crossColor = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-      const crossSpacing = 45;
-      
-      for (let x = crossSpacing; x < width; x += crossSpacing) {
-        for (let y = crossSpacing; y < height; y += crossSpacing) {
-          // Create cross with vertical and horizontal lines
-          const vertLine = figma.createRectangle();
-          vertLine.resize(2, 12);
-          vertLine.x = x - 1;
-          vertLine.y = y - 6;
-          vertLine.fills = [{ type: 'SOLID', color: crossColor }];
-          
-          const horizLine = figma.createRectangle();
-          horizLine.resize(12, 2);
-          horizLine.x = x - 6;
-          horizLine.y = y - 1;
-          horizLine.fills = [{ type: 'SOLID', color: crossColor }];
-          
-          frame.appendChild(vertLine);
-          frame.appendChild(horizLine);
-          vertLine.name = 'Cross Vertical';
-          horizLine.name = 'Cross Horizontal';
-          elements.push(vertLine, horizLine);
+    case 'Crosses': { // <-- Added opening brace
+      // SVG: Create cross pattern with plus signs
+      const crossesSVG = [];
+      const crossSpacingSVG = 45;
+      const crossSize = 12;
+      const crossThickness = 2;
+  
+      for (let x = crossSpacingSVG; x < width; x += crossSpacingSVG) {
+        for (let y = crossSpacingSVG; y < height; y += crossSpacingSVG) {
+          // Vertical line
+          crossesSVG.push(`<rect x="${x - crossThickness / 2}" y="${y - crossSize / 2}" width="${crossThickness}" height="${crossSize}" fill="#D8D8D8"/>`);
+          // Horizontal line
+          crossesSVG.push(`<rect x="${x - crossSize / 2}" y="${y - crossThickness / 2}" width="${crossSize}" height="${crossThickness}" fill="#D8D8D8"/>`);
         }
       }
+      pattern = `<g>${crossesSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'TinyTriangles':
-      // Create tiny triangles pattern pointing in different directions
-      const triangleColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-      const triangleSpacing = 30;
-      
-      for (let x = triangleSpacing; x < width; x += triangleSpacing) {
-        for (let y = triangleSpacing; y < height; y += triangleSpacing) {
-          // For fallback, we'll use a simple triangle approximation
-          // using a rectangle with rotation
-          const triangle = figma.createRectangle();
-          triangle.resize(6, 6);
-          triangle.x = x - 3;
-          triangle.y = y - 3;
-          
-          // Rotate to different directions based on position
-          const direction = (Math.floor(x / triangleSpacing) + Math.floor(y / triangleSpacing)) % 4;
-          triangle.rotation = direction * 90; // 0, 90, 180, 270 degrees
-          
-          triangle.fills = [{ type: 'SOLID', color: triangleColor }];
-          frame.appendChild(triangle);
-          triangle.name = 'Tiny Triangle';
-          elements.push(triangle);
+    case 'TinyTriangles': { // <-- Added opening brace
+      // SVG: Create tiny triangles pattern pointing in different directions
+      const trianglesSVG = [];
+      const triangleSpacingSVG = 30;
+      const triSize = 6; // Size of the triangle base/height
+  
+      for (let x = triangleSpacingSVG; x < width; x += triangleSpacingSVG) {
+        for (let y = triangleSpacingSVG; y < height; y += triangleSpacingSVG) {
+          const direction = (Math.floor(x / triangleSpacingSVG) + Math.floor(y / triangleSpacingSVG)) % 4;
+          let points = "";
+          // Define points based on direction (0: up, 1: right, 2: down, 3: left)
+          const halfSize = triSize / 2;
+          if (direction === 0) points = `${x},${y-halfSize} ${x-halfSize},${y+halfSize} ${x+halfSize},${y+halfSize}`;
+          else if (direction === 1) points = `${x-halfSize},${y-halfSize} ${x+halfSize},${y} ${x-halfSize},${y+halfSize}`;
+          else if (direction === 2) points = `${x-halfSize},${y-halfSize} ${x+halfSize},${y-halfSize} ${x},${y+halfSize}`;
+          else points = `${x+halfSize},${y-halfSize} ${x+halfSize},${y+halfSize} ${x-halfSize},${y}`;
+  
+          trianglesSVG.push(`<polygon points="${points}" fill="#E0E0E0"/>`);
         }
       }
+      pattern = `<g>${trianglesSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'CircleScatter':
-      // Create scattered circles of different sizes
-      const circleColors = [
-        { r: 0.9, g: 0.9, b: 0.9 }, // #E5E5E5
-        { r: 0.94, g: 0.94, b: 0.94 }, // #F0F0F0
-        { r: 0.88, g: 0.88, b: 0.88 } // #E0E0E0
-      ];
-      
-      // Create circles with different sizes at pseudo-random positions
+    case 'CircleScatter': { // <-- Added opening brace
+      // SVG: Create scattered circles of different sizes
+      const circlesSVG = [];
+      const colorsSVG = ["#E5E5E5", "#F0F0F0", "#E0E0E0"];
+  
       for (let i = 0; i < 50; i++) {
-        // Use deterministic pseudo-random positions
         const x = (((i * 13) % 17) / 17) * width;
         const y = (((i * 19) % 23) / 23) * height;
-        const size = 3 + ((i % 5) * 2);
-        
-        const circle = figma.createEllipse();
-        circle.resize(size, size);
-        circle.x = x - size/2;
-        circle.y = y - size/2;
-        circle.fills = [{ type: 'SOLID', color: circleColors[i % 3] }];
-        frame.appendChild(circle);
-        circle.name = 'Scattered Circle';
-        elements.push(circle);
+        const radius = (3 + ((i % 5) * 2)) / 2;
+        const color = colorsSVG[i % 3];
+        circlesSVG.push(`<circle cx="${x}" cy="${y}" r="${radius}" fill="${color}"/>`);
       }
+      pattern = `<g>${circlesSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
     case 'HexagonGrid': {
-      // Create honeycomb hex grid pattern
-      const hexColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-      const hexSize = 20;
-      let hexHorizontalSpacing = hexSize * Math.sqrt(3);
-      let hexVerticalSpacing = hexSize * 1.5;
-      
-      // Calculate rows and columns needed
-      let cols = Math.ceil(width / hexHorizontalSpacing) + 1;
-      const rows = Math.ceil(height / hexVerticalSpacing) + 1;
-      
-      for (let row = 0; row < rows; row++) {
-        for (let col = 0; col < cols; col++) {
-          // Calculate center of hexagon
-          const x = col * hexHorizontalSpacing + (row % 2) * (hexHorizontalSpacing/2);
-          const y = row * hexVerticalSpacing;
-          
-          // For fallback, use a circle to approximate a hexagon
-          const hex = figma.createEllipse();
-          hex.resize(hexSize * 1.5, hexSize * 1.5);
-          hex.x = x - hexSize * 0.75;
-          hex.y = y - hexSize * 0.75;
-          
-          // Create a stroke only, no fill
-          hex.fills = [];
-          hex.strokes = [{ type: 'SOLID', color: hexColor }];
-          hex.strokeWeight = 1;
-          
-          frame.appendChild(hex);
-          hex.name = 'Hexagon';
-          elements.push(hex);
+      // SVG: Create honeycomb hex grid pattern
+      const hexagonsSVG = [];
+      const hexSizeSVG = 20;
+      const hexWidth = Math.sqrt(3) * hexSizeSVG;
+      const hexHeight = 2 * hexSizeSVG;
+      const vertSpacing = hexHeight * 3/4;
+  
+      for (let row = 0; row * vertSpacing < height + hexHeight; row++) {
+        for (let col = 0; col * hexWidth < width + hexWidth; col++) {
+          const xOffset = (row % 2) * (hexWidth / 2);
+          const cx = col * hexWidth + xOffset;
+          const cy = row * vertSpacing;
+  
+          const points = [];
+          for (let i = 0; i < 6; i++) {
+            const angle_deg = 60 * i - 30;
+            const angle_rad = Math.PI / 180 * angle_deg;
+            const px = cx + hexSizeSVG * Math.cos(angle_rad);
+            const py = cy + hexSizeSVG * Math.sin(angle_rad);
+            points.push(`${px},${py}`);
+          }
+          hexagonsSVG.push(`<polygon points="${points.join(' ')}" stroke="#E0E0E0" stroke-width="1" fill="none"/>`);
         }
       }
+      pattern = `<g>${hexagonsSVG.join('')}</g>`;
       break;
     }
     
-    case 'Chevrons':
-      // Create chevron pattern (V shapes)
-      const chevronColor = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-      const rowSpacing = 30;
-      
-      for (let y = rowSpacing; y < height; y += rowSpacing) {
-        // Create multiple chevrons in a row
-        for (let x = 0; x < width; x += 20) {
-          // Create a V shape with two lines for each chevron
-          const line1 = figma.createLine();
-          line1.strokeWeight = 1;
-          line1.strokes = [{ type: 'SOLID', color: chevronColor }];
-          line1.resize(10, 0);
-          line1.x = x;
-          line1.y = y;
-          line1.rotation = -45;
-          
-          const line2 = figma.createLine();
-          line2.strokeWeight = 1;
-          line2.strokes = [{ type: 'SOLID', color: chevronColor }];
-          line2.resize(10, 0);
-          line2.x = x + 10;
-          line2.y = y - 7;
-          line2.rotation = 45;
-          
-          frame.appendChild(line1);
-          frame.appendChild(line2);
-          line1.name = 'Chevron Left';
-          line2.name = 'Chevron Right';
-          elements.push(line1, line2);
+    case 'Chevrons': { // <-- Added opening brace
+      // SVG: Create chevron pattern (V shapes)
+      const chevronsSVG = [];
+      const chevronRowSpacing = 30;
+      const chevronWidth = 14; // Width of the V
+      const chevronHeight = 10; // Height of the V
+      const chevronSpacingX = 20;
+  
+      for (let y = chevronRowSpacing; y < height; y += chevronRowSpacing) {
+        for (let x = chevronSpacingX / 2; x < width; x += chevronSpacingX) {
+          const points = `${x - chevronWidth / 2},${y + chevronHeight / 2} ${x},${y - chevronHeight / 2} ${x + chevronWidth / 2},${y + chevronHeight / 2}`;
+          chevronsSVG.push(`<polyline points="${points}" stroke="#D8D8D8" stroke-width="1.5" fill="none"/>`);
         }
       }
+      pattern = `<g>${chevronsSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'SquareTiles':
-      // Create square tile pattern
-      const squareColor = { r: 0.9, g: 0.9, b: 0.9 }; // #E5E5E5
-      const tileSize = 30;
-      const spacing = 40;
-      
-      for (let x = spacing/2; x < width; x += spacing) {
-        for (let y = spacing/2; y < height; y += spacing) {
-          const square = figma.createRectangle();
-          square.resize(tileSize, tileSize);
-          square.x = x - tileSize/2;
-          square.y = y - tileSize/2;
-          
-          // Create squares with stroke only, no fill
-          square.fills = [];
-          square.strokes = [{ type: 'SOLID', color: squareColor }];
-          square.strokeWeight = 1;
-          
-          frame.appendChild(square);
-          square.name = 'Square Tile';
-          elements.push(square);
+    case 'SquareTiles': { // <-- Added opening brace
+      // SVG: Create square tile pattern
+      const squaresSVG = [];
+      const tileSizeSVG = 30;
+      const tileSpacingSVG = 40;
+  
+      for (let x = tileSpacingSVG / 2; x < width; x += tileSpacingSVG) {
+        for (let y = tileSpacingSVG / 2; y < height; y += tileSpacingSVG) {
+          squaresSVG.push(`<rect x="${x - tileSizeSVG / 2}" y="${y - tileSizeSVG / 2}" width="${tileSizeSVG}" height="${tileSizeSVG}" stroke="#E5E5E5" stroke-width="1" fill="none"/>`);
         }
       }
+      pattern = `<g>${squaresSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'WaveDots':
-      // Create wave dots pattern
-      const dotColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
-      const waveHorizontalSpacing = 20;
-      const amplitude = 10;
-      const waveVerticalSpacing = 30;
-      
-      for (let row = 0; row < height / waveVerticalSpacing + 1; row++) {
-        for (let col = 0; col < width / waveHorizontalSpacing + 1; col++) {
-          const x = col * waveHorizontalSpacing;
-          // Create a sine wave pattern
-          const y = row * waveVerticalSpacing + Math.sin(col * 0.5) * amplitude;
-          
-          const dot = figma.createEllipse();
-          dot.resize(4, 4);
-          dot.x = x - 2;
-          dot.y = y - 2;
-          dot.fills = [{ type: 'SOLID', color: dotColor }];
-          frame.appendChild(dot);
-          dot.name = 'Wave Dot';
-          elements.push(dot);
+    case 'WaveDots': { // <-- Added opening brace
+      // SVG: Create wave dots pattern
+      const waveDotsSVG = [];
+      const waveHSpacing = 20;
+      const waveAmp = 10;
+      const waveVSpacing = 30;
+      const dotRadius = 2;
+  
+      for (let row = 0; row * waveVSpacing < height + waveAmp; row++) {
+        for (let col = 0; col * waveHSpacing < width; col++) {
+          const x = col * waveHSpacing;
+          const y = row * waveVSpacing + Math.sin(col * 0.5) * waveAmp;
+          if (y > -dotRadius && y < height + dotRadius) { // Only draw if potentially visible
+              waveDotsSVG.push(`<circle cx="${x}" cy="${y}" r="${dotRadius}" fill="#E0E0E0"/>`);
+          }
         }
       }
+      pattern = `<g>${waveDotsSVG.join('')}</g>`;
       break;
+    } // <-- Added closing brace
       
-    case 'ConcentricCircles':
+    case 'ConcentricCircles': { // <-- Added opening brace
       // Concentric circles pattern
       const concentricCircles = [];
       const ccSpacing = 70;
@@ -2858,6 +3042,7 @@ function generateSVG(patternType, width, height) {
         </g>
       `;
       break;
+    } // <-- Added closing brace
       
     case 'ThinXMarks':
       // Thin X marks pattern
@@ -4380,108 +4565,108 @@ function generateSVG(patternType, width, height) {
       `;
       break;
 
-    case 'TriangleSpirals':
-      // Triangle Spirals pattern
-      const triangleSpirals = [];
-      const tsSpiralCount = Math.ceil(width / 250); // Adjust count based on width
-      const trianglesPerSpiral = 25; // Increased count
-      const tsMaxRadius = Math.min(width, height) / (tsSpiralCount * 1.5); // Adjust radius
-      
-      for (let spiral = 0; spiral < tsSpiralCount; spiral++) {
-        const centerX = width * (spiral + 0.5) / tsSpiralCount;
-        const centerY = height / 2; // Center vertically
-        for (let i = 0; i < trianglesPerSpiral; i++) {
-          const angle = i * 0.7; // Adjusted angle step
-          const radius = (i / trianglesPerSpiral) * tsMaxRadius;
-          const triX = centerX + Math.cos(angle) * radius;
-          const triY = centerY + Math.sin(angle) * radius;
-          const triSize = 4 + i * 0.4; // Increased size
-          triangleSpirals.push(`<polygon points=\"${triX},${triY-triSize} ${triX-triSize*0.866},${triY+triSize*0.5} ${triX+triSize*0.866},${triY+triSize*0.5}\" transform=\"rotate(${angle*60} ${triX} ${triY})\" fill=\"#E0E0E0\"/>`);
+      case 'TriangleSpirals':
+        // Triangle Spirals pattern
+        const triangleSpirals = [];
+        const tsSpiralCount = Math.ceil(width / 250); // Adjust count based on width
+        const trianglesPerSpiral = 25; // Increased count
+        const tsMaxRadius = Math.min(width, height) / (tsSpiralCount * 1.5); // Adjust radius
+        
+        for (let spiral = 0; spiral < tsSpiralCount; spiral++) {
+          const centerX = width * (spiral + 0.5) / tsSpiralCount;
+          const centerY = height / 2; // Center vertically
+          for (let i = 0; i < trianglesPerSpiral; i++) {
+            const angle = i * 0.7; // Adjusted angle step
+            const radius = (i / trianglesPerSpiral) * tsMaxRadius;
+            const triX = centerX + Math.cos(angle) * radius;
+            const triY = centerY + Math.sin(angle) * radius;
+            const triSize = 4 + i * 0.4; // Increased size
+            triangleSpirals.push(`<polygon points=\"${triX},${triY-triSize} ${triX-triSize*0.866},${triY+triSize*0.5} ${triX+triSize*0.866},${triY+triSize*0.5}\" transform=\"rotate(${angle*60} ${triX} ${triY})\" fill=\"#E0E0E0\"/>`);
+          }
         }
-      }
-      pattern = `
-        <g>
-          ${triangleSpirals.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${triangleSpirals.join('\\n')}
+          </g>
+        `;
+        break;
 
-    case 'OffsetCubes':
-      // Offset Cubes pattern
-      const offsetCubes = [];
-      const ocSize = 15; // Increased size
-      const ocSpacingX = ocSize * 1.732;
-      const ocSpacingY = ocSize * 1.5;
-      for (let row = -1; row < Math.ceil(height / ocSpacingY) + 1; row++) {
-        for (let col = -1; col < Math.ceil(width / ocSpacingX) + 1; col++) {
-          const x = col * ocSpacingX + (row % 2) * (ocSpacingX / 2);
-          const y = row * ocSpacingY;
-          // Draw top, left, right faces
-          offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x},${y-ocSize} ${x-ocSpacingX/2},${y-ocSize/2} Z\" fill=\"#F0F0F0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Top
-          offsetCubes.push(`<polygon points=\"${x},${y} ${x-ocSpacingX/2},${y-ocSize/2} ${x-ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#E0E0E0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Left
-          offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x+ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#D0D0D0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Right
+      case 'OffsetCubes':
+        // Offset Cubes pattern
+        const offsetCubes = [];
+        const ocSize = 15; // Increased size
+        const ocSpacingX = ocSize * 1.732;
+        const ocSpacingY = ocSize * 1.5;
+        for (let row = -1; row < Math.ceil(height / ocSpacingY) + 1; row++) {
+          for (let col = -1; col < Math.ceil(width / ocSpacingX) + 1; col++) {
+            const x = col * ocSpacingX + (row % 2) * (ocSpacingX / 2);
+            const y = row * ocSpacingY;
+            // Draw top, left, right faces
+            offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x},${y-ocSize} ${x-ocSpacingX/2},${y-ocSize/2} Z\" fill=\"#F0F0F0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Top
+            offsetCubes.push(`<polygon points=\"${x},${y} ${x-ocSpacingX/2},${y-ocSize/2} ${x-ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#E0E0E0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Left
+            offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x+ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#D0D0D0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Right
+          }
         }
-      }
-      pattern = `
-        <g>
-          ${offsetCubes.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${offsetCubes.join('\\n')}
+          </g>
+        `;
+        break;
 
-    case 'InterlockingRings':
-      // Interlocking Rings pattern
-      const interlockingRings = [];
-      const irSpacingX = 25; // Increased spacing
-      const irSpacingY = 18; // Increased spacing
-      const irRadius = 15; // Increased radius
-      for (let row = 0; row < Math.ceil(height / irSpacingY); row++) {
-        for (let col = 0; col < Math.ceil(width / irSpacingX); col++) {
-          const x = col * irSpacingX + (row % 2 ? irSpacingX / 2 : 0);
-          const y = row * irSpacingY;
-          interlockingRings.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${irRadius}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`); // Increased stroke-width
+      case 'InterlockingRings':
+        // Interlocking Rings pattern
+        const interlockingRings = [];
+        const irSpacingX = 25; // Increased spacing
+        const irSpacingY = 18; // Increased spacing
+        const irRadius = 15; // Increased radius
+        for (let row = 0; row < Math.ceil(height / irSpacingY); row++) {
+          for (let col = 0; col < Math.ceil(width / irSpacingX); col++) {
+            const x = col * irSpacingX + (row % 2 ? irSpacingX / 2 : 0);
+            const y = row * irSpacingY;
+            interlockingRings.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${irRadius}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`); // Increased stroke-width
+          }
         }
-      }
-      pattern = `
-        <g>
-          ${interlockingRings.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${interlockingRings.join('\\n')}
+          </g>
+        `;
+        break;
 
-    case '3DZigzags':
-      // 3D Zigzags pattern
-      const threeDZigzags = [];
-      const zzSpacing = 30; // Increased spacing
-      const zzHeight = 12; // Increased size
-      const zzDepth = 4; // Increased depth
-      for (let y = zzSpacing; y < height; y += zzSpacing * 1.5) {
-        let pathD = `M 0 ${y}`;
-        let shadowD = `M ${zzDepth} ${y + zzDepth}`;
-        for (let x = 0; x < width; x += zzHeight * 2) {
-          pathD += ` L ${x+zzHeight} ${y-zzHeight/2} L ${x+zzHeight*2} ${y}`;
-          shadowD += ` L ${x+zzHeight+zzDepth} ${y-zzHeight/2+zzDepth} L ${x+zzHeight*2+zzDepth} ${y+zzDepth}`;
+      case '3DZigzags':
+        // 3D Zigzags pattern
+        const threeDZigzags = [];
+        const zzSpacing = 30; // Increased spacing
+        const zzHeight = 12; // Increased size
+        const zzDepth = 4; // Increased depth
+        for (let y = zzSpacing; y < height; y += zzSpacing * 1.5) {
+          let pathD = `M 0 ${y}`;
+          let shadowD = `M ${zzDepth} ${y + zzDepth}`;
+          for (let x = 0; x < width; x += zzHeight * 2) {
+            pathD += ` L ${x+zzHeight} ${y-zzHeight/2} L ${x+zzHeight*2} ${y}`;
+            shadowD += ` L ${x+zzHeight+zzDepth} ${y-zzHeight/2+zzDepth} L ${x+zzHeight*2+zzDepth} ${y+zzDepth}`;
+          }
+          threeDZigzags.push(`<path d=\"${shadowD}\" stroke=\"#C8C8C8\" stroke-width=\"1\" fill=\"none\"/>`);
+          threeDZigzags.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
         }
-        threeDZigzags.push(`<path d=\"${shadowD}\" stroke=\"#C8C8C8\" stroke-width=\"1\" fill=\"none\"/>`);
-        threeDZigzags.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
-      }
-      pattern = `
-        <g>
-          ${threeDZigzags.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${threeDZigzags.join('\\n')}
+          </g>
+        `;
+        break;
 
-    case 'DoodleLoops':
-      // Doodle Loops pattern
-      const doodleLoops = [];
-      const doodleLoopsDlSpacing = 40; // Renamed from dlSpacing
-      for (let row = 0; row < Math.ceil(height / doodleLoopsDlSpacing); row++) {
-        for (let col = 0; col < Math.ceil(width / doodleLoopsDlSpacing); col++) {
-            const x = col * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
-            const y = row * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
-            const rotation = (x + y) * 2; // Simpler rotation
-            doodleLoops.push(`<path d=\"M ${x-12} ${y} C ${x-12} ${y-15}, ${x+12} ${y-15}, ${x+12} ${y} S ${x-12} ${y+15}, ${x-12} ${y}\" transform=\"rotate(${rotation} ${x} ${y})\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+      case 'DoodleLoops':
+        // Doodle Loops pattern
+        const doodleLoops = [];
+        const doodleLoopsDlSpacing = 40; // Renamed from dlSpacing
+        for (let row = 0; row < Math.ceil(height / doodleLoopsDlSpacing); row++) {
+          for (let col = 0; col < Math.ceil(width / doodleLoopsDlSpacing); col++) {
+              const x = col * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
+              const y = row * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
+              const rotation = (x + y) * 2; // Simpler rotation
+              doodleLoops.push(`<path d=\"M ${x-12} ${y} C ${x-12} ${y-15}, ${x+12} ${y-15}, ${x+12} ${y} S ${x-12} ${y+15}, ${x-12} ${y}\" transform=\"rotate(${rotation} ${x} ${y})\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
           }
         }
         pattern = `
@@ -4491,94 +4676,95 @@ function generateSVG(patternType, width, height) {
         `;
         break;
 
-    case 'ThinSlashGrid':
-      // Thin Slash Grid pattern
-      const thinSlashGrid = [];
-      const tsgSpacing = 10; // Increased spacing
-      const tsgLineLength = Math.max(width, height) * 1.5; // Renamed from lineLength, ensure lines cover the area
-      for (let i = -Math.ceil(height / tsgSpacing) - Math.ceil(width / tsgSpacing); i < Math.ceil(width / tsgSpacing) + Math.ceil(height / tsgSpacing); i++) {
-        const startX = i * tsgSpacing;
-        // Forward slashes
-        thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX - tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
-        // Backward slashes
-        thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX + tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
-      }
-      pattern = `
-        <g>
-          ${thinSlashGrid.join('\\n')}
-        </g>
-      `;
-      break;
-
-    case 'ParallelCurves':
-      // Parallel Curves pattern
-      const parallelCurves = [];
-      const pcSpacing = 20; // Increased spacing
-      const numCurves = Math.ceil(height / pcSpacing);
-      const pcAmplitude = 10; // Renamed from amplitude, Increased amplitude
-      const pcFrequency = 0.03; // Renamed from frequency, Adjusted frequency
-
-      for (let i = 0; i < numCurves; i++) {
-        const yOffset = i * pcSpacing + pcSpacing / 2;
-        let pathD = `M 0 ${yOffset}`;
-        for (let x = 0; x <= width; x += 10) {
-          const y = yOffset + Math.sin(x * pcFrequency + i * 0.5) * pcAmplitude;
-          pathD += ` L ${x} ${y}`;
+      case 'ThinSlashGrid':
+        // Thin Slash Grid pattern
+        const thinSlashGrid = [];
+        const tsgSpacing = 10; // Increased spacing
+        const tsgLineLength = Math.max(width, height) * 1.5; // Renamed from lineLength, ensure lines cover the area
+        for (let i = -Math.ceil(height / tsgSpacing) - Math.ceil(width / tsgSpacing); i < Math.ceil(width / tsgSpacing) + Math.ceil(height / tsgSpacing); i++) {
+          const startX = i * tsgSpacing;
+          // Forward slashes
+          thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX - tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
+          // Backward slashes
+          thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX + tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
         }
-        parallelCurves.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`);
-      }
-      pattern = `
-        <g>
-          ${parallelCurves.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${thinSlashGrid.join('\\n')}
+          </g>
+        `;
+        break;
 
-    case 'StarDotCluster':
-      // Star + Dot Cluster pattern
-      const starDotCluster = [];
-      const sdcSpacing = 50; // Increased spacing
-      const starSize = 8; // Increased star size
-      const dotRadius = 1.5; // Increased dot size
-      const dotClusterRadius = 12; // Increased cluster radius
+      case 'ParallelCurves':
+        // Parallel Curves pattern
+        const parallelCurves = [];
+        const pcSpacing = 20; // Increased spacing
+        const numCurves = Math.ceil(height / pcSpacing);
+        const pcAmplitude = 10; // Renamed from amplitude, Increased amplitude
+        const pcFrequency = 0.03; // Renamed from frequency, Adjusted frequency
 
-      for (let row = 0; row < Math.ceil(height / sdcSpacing); row++) {
-        for (let col = 0; col < Math.ceil(width / sdcSpacing); col++) {
-          const x = col * sdcSpacing + sdcSpacing/2;
-          const y = row * sdcSpacing + sdcSpacing/2;
-          // Star
-          starDotCluster.push(`<path d=\"M ${x} ${y-starSize} L ${x+starSize*0.3} ${y-starSize*0.3} L ${x+starSize} ${y} L ${x+starSize*0.3} ${y+starSize*0.3} L ${x} ${y+starSize} L ${x-starSize*0.3} ${y+starSize*0.3} L ${x-starSize} ${y} L ${x-starSize*0.3} ${y-starSize*0.3} Z\" fill=\"#E0E0E0\"/>`);
-          // Dots
-          for (let i = 0; i < 6; i++) { // Increased dot count
-            const angle = (i / 6) * Math.PI * 2 + (x+y)*0.01;
-            const dotX = x + Math.cos(angle) * dotClusterRadius;
-            const dotY = y + Math.sin(angle) * dotClusterRadius;
-            starDotCluster.push(`<circle cx=\"${dotX}\" cy=\"${dotY}\" r=\"${dotRadius}\" fill=\"#D8D8D8\"/>`);
+        for (let i = 0; i < numCurves; i++) {
+          const yOffset = i * pcSpacing + pcSpacing / 2;
+          let pathD = `M 0 ${yOffset}`;
+          for (let x = 0; x <= width; x += 10) {
+            const y = yOffset + Math.sin(x * pcFrequency + i * 0.5) * pcAmplitude;
+            pathD += ` L ${x} ${y}`;
+          }
+          parallelCurves.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`);
+        }
+        pattern = `
+          <g>
+            ${parallelCurves.join('\\n')}
+          </g>
+        `;
+        break;
+
+      case 'StarDotCluster': { // <-- Added opening brace
+        // Star + Dot Cluster pattern
+        const starDotCluster = [];
+        const sdcSpacing = 50; // Increased spacing
+        const starSize = 8; // Increased star size
+        const dotRadius = 1.5; // Increased dot size
+        const dotClusterRadius = 12; // Increased cluster radius
+
+        for (let row = 0; row < Math.ceil(height / sdcSpacing); row++) {
+          for (let col = 0; col < Math.ceil(width / sdcSpacing); col++) {
+            const x = col * sdcSpacing + sdcSpacing/2;
+            const y = row * sdcSpacing + sdcSpacing/2;
+            // Star
+            starDotCluster.push(`<path d=\"M ${x} ${y-starSize} L ${x+starSize*0.3} ${y-starSize*0.3} L ${x+starSize} ${y} L ${x+starSize*0.3} ${y+starSize*0.3} L ${x} ${y+starSize} L ${x-starSize*0.3} ${y+starSize*0.3} L ${x-starSize} ${y} L ${x-starSize*0.3} ${y-starSize*0.3} Z\" fill=\"#E0E0E0\"/>`);
+            // Dots
+            for (let i = 0; i < 6; i++) { // Increased dot count
+              const angle = (i / 6) * Math.PI * 2 + (x+y)*0.01;
+              const dotX = x + Math.cos(angle) * dotClusterRadius;
+              const dotY = y + Math.sin(angle) * dotClusterRadius;
+              starDotCluster.push(`<circle cx=\"${dotX}\" cy=\"${dotY}\" r=\"${dotRadius}\" fill=\"#D8D8D8\"/>`);
+            }
           }
         }
-      }
-      pattern = `
-        <g>
-          ${starDotCluster.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${starDotCluster.join('\\n')}
+          </g>
+        `;
+        break;
+      } // <-- Added closing brace
 
-    case 'LineLeaf':
-      // Line & Leaf pattern
-      const lineLeaf = [];
-      const llLineSpacing = 25; // Increased spacing
-      const leafSpacing = 50; // Increased spacing
-      const leafScale = 1.0; // Increased scale
+      case 'LineLeaf': { // <-- Added opening brace
+        // Line & Leaf pattern
+        const lineLeaf = [];
+        const llLineSpacing = 25; // Increased spacing
+        const leafSpacing = 50; // Increased spacing
+        const leafScale = 1.0; // Increased scale
 
-      for (let y = llLineSpacing; y < height; y += llLineSpacing) {
-        lineLeaf.push(`<line x1=\"0\" y1=\"${y}\" x2=\"${width}\" y2=\"${y}\" stroke=\"#E0E0E0\" stroke-width=\"1\"/>`);
-        // Add leaves
-        for (let x = leafSpacing; x < width; x += leafSpacing) {
-          if ((Math.floor(x / leafSpacing) + Math.floor(y / llLineSpacing)) % 2 === 0) { // Alternate placement
-             const leafSize = 4 * leafScale;
-             const rotation = (x+y)*3;
-             lineLeaf.push(`<path d=\"M ${x} ${y-leafSize*0.25} c -${leafSize*0.75} -${leafSize*0.5} -${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25} c ${leafSize*0.75} 0 ${leafSize*0.75} ${leafSize*0.75} 0 ${leafSize*1.25} M ${x} ${y-leafSize*0.25} c ${leafSize*0.75} -${leafSize*0.5} ${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25}\" fill=\"#D8D8D8\" transform=\"rotate(${rotation} ${x} ${y}) scale(${leafScale})\"/>`);
+        for (let y = llLineSpacing; y < frame.height; y += llLineSpacing) {
+          lineLeaf.push(`<line x1=\"0\" y1=\"${y}\" x2=\"${frame.width}\" y2=\"${y}\" stroke=\"#E0E0E0\" stroke-width=\"1\"/>`);
+          // Add leaves
+          for (let x = leafSpacing; x < frame.width; x += leafSpacing) {
+            if ((Math.floor(x / leafSpacing) + Math.floor(y / llLineSpacing)) % 2 === 0) { // Alternate placement
+               const leafSize = 4 * leafScale;
+               const rotation = (x+y)*3;
+               lineLeaf.push(`<path d=\"M ${x} ${y-leafSize*0.25} c -${leafSize*0.75} -${leafSize*0.5} -${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25} c ${leafSize*0.75} 0 ${leafSize*0.75} ${leafSize*0.75} 0 ${leafSize*1.25} M ${x} ${y-leafSize*0.25} c ${leafSize*0.75} -${leafSize*0.5} ${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25}\" fill=\"#D8D8D8\" transform=\"rotate(${rotation} ${x} ${y}) scale(${leafScale})\"/>`);
               }
             }
           }
@@ -4588,124 +4774,436 @@ function generateSVG(patternType, width, height) {
             </g>
           `;
           break;
+       } // <-- Added closing brace
 
-    case 'TearGrid':
-      // Tear Grid pattern
-      const tearGrid = [];
-      const tgSpacing = 25; // Increased spacing
-      const tearSize = 6; // Increased size
+      case 'TearGrid': { // <-- Added opening brace
+        // Tear Grid pattern
+        const tearGrid = [];
+        const tgSpacing = 25; // Increased spacing
+        const tearSize = 6; // Increased size
 
-      for (let row = 0; row < Math.ceil(height / tgSpacing); row++) {
-        for (let col = 0; col < Math.ceil(width / tgSpacing); col++) {
-          const x = col * tgSpacing + tgSpacing/2;
-          const y = row * tgSpacing + tgSpacing/2;
-          const rotation = ((row + col) % 4) * 90 + 15; // Add rotation
-          tearGrid.push(`<path d=\"M 0 ${-tearSize*1.5} C ${tearSize} ${-tearSize*1.5} ${tearSize} ${tearSize*0.5} 0 ${tearSize*0.5} C ${-tearSize} ${tearSize*0.5} ${-tearSize} ${-tearSize*1.5} 0 ${-tearSize*1.5} Z\" transform=\"translate(${x}, ${y}) rotate(${rotation}) scale(0.8)\" fill=\"#E0E0E0\"/>`);
+        for (let row = 0; row < Math.ceil(frame.height / tgSpacing); row++) {
+          for (let col = 0; col < Math.ceil(frame.width / tgSpacing); col++) {
+            const x = col * tgSpacing + tgSpacing/2;
+            const y = row * tgSpacing + tgSpacing/2;
+            const rotation = ((row + col) % 4) * 90 + 15; // Add rotation
+            tearGrid.push(`<path d=\"M 0 ${-tearSize*1.5} C ${tearSize} ${-tearSize*1.5} ${tearSize} ${tearSize*0.5} 0 ${tearSize*0.5} C ${-tearSize} ${tearSize*0.5} ${-tearSize} ${-tearSize*1.5} 0 ${-tearSize*1.5} Z\" transform=\"translate(${x}, ${y}) rotate(${rotation}) scale(0.8)\" fill=\"#E0E0E0\"/>`);
+          }
         }
-      }
-      pattern = `
-        <g>
-          ${tearGrid.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${tearGrid.join('\\n')}
+          </g>
+        `;
+        break;
+      } // <-- Added closing brace
 
-    case 'EyeSymbols':
-      // Eye Symbols pattern
-      const eyeSymbols = [];
-      const eyeCount = Math.ceil((width * height) / (60*60)); // Adjust count based on area
+      case 'EyeSymbols': { // <-- Added opening brace
+        // Eye Symbols pattern
+        const eyeSymbols = [];
+        const eyeCount = Math.ceil((frame.width * frame.height) / (60*60)); // Adjust count based on area
 
-      for (let i = 0; i < eyeCount; i++) {
-        // Use more structured placement instead of pure random for consistency
-        const gridDim = Math.ceil(Math.sqrt(eyeCount));
-        const cellWidth = width / gridDim;
-        const cellHeight = height / gridDim;
-        const gridX = (i % gridDim) * cellWidth;
-        const gridY = Math.floor(i / gridDim) * cellHeight;
-        
-        // Add some random offset within the cell
-        const x = gridX + cellWidth * (0.3 + Math.random() * 0.4);
-        const y = gridY + cellHeight * (0.3 + Math.random() * 0.4);
-        
-        const eyeRX = 10; // Increased size
-        const eyeRY = 5; // Increased size
-        const pupilR = 2.5; // Increased size
-
-        eyeSymbols.push(`<ellipse cx=\"${x}\" cy=\"${y}\" rx=\"${eyeRX}\" ry=\"${eyeRY}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
-        eyeSymbols.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${pupilR}\" fill=\"#E0E0E0\"/>`);
-      }
-      pattern = `
-        <g>
-          ${eyeSymbols.join('\\n')}
-        </g>
-      `;
-      break;
-
-    case 'PuzzleGrid':
-      // Puzzle Grid pattern
-      const puzzleGrid = [];
-      const pzSize = 40; // Increased size
-
-      for (let row = 0; row < Math.ceil(height / pzSize); row++) {
-        for (let col = 0; col < Math.ceil(width / pzSize); col++) {
-          const x = col * pzSize;
-          const y = row * pzSize;
+        for (let i = 0; i < eyeCount; i++) {
+          // Use more structured placement instead of pure random for consistency
+          const gridDim = Math.ceil(Math.sqrt(eyeCount));
+          const cellWidth = frame.width / gridDim;
+          const cellHeight = frame.height / gridDim;
+          const gridX = (i % gridDim) * cellWidth;
+          const gridY = Math.floor(i / gridDim) * cellHeight;
           
-          // Define nub positions (0:none, 1:out, -1:in)
-          const topNub = (row > 0) ? -((col + row*2) % 3 - 1) : 0;
-          const rightNub = (col < Math.ceil(width / pzSize) - 1) ? ((col*2 + row) % 3 - 1) : 0;
-          const bottomNub = (row < Math.ceil(height / pzSize) - 1) ? ((col + row*2) % 3 - 1) : 0;
-          const leftNub = (col > 0) ? -((col*2 + row) % 3 - 1) : 0;
+          // Add some random offset within the cell
+          const x = gridX + cellWidth * (0.3 + Math.random() * 0.4);
+          const y = gridY + cellHeight * (0.3 + Math.random() * 0.4);
+          
+          const eyeRX = 10; // Increased size
+          const eyeRY = 5; // Increased size
+          const pupilR = 2.5; // Increased size
 
-          let pathD = `M ${x} ${y}`;
-          // Top edge
-          pathD += ` h ${pzSize*0.35}`;
-          if (topNub !== 0) {
-            pathD += ` c 0 ${topNub*pzSize*0.15} ${pzSize*0.1} ${topNub*pzSize*0.2} ${pzSize*0.15} ${topNub*pzSize*0.2}`;
-            pathD += ` s ${pzSize*0.15} ${-topNub*pzSize*0.05} ${pzSize*0.15} 0`;
-            pathD += ` c ${pzSize*0.05} 0 ${pzSize*0.15} ${-topNub*pzSize*0.2} ${pzSize*0.15} ${-topNub*pzSize*0.2}`;
-          }
-          pathD += ` h ${pzSize*0.35}`;
-          // Right edge
-          pathD += ` v ${pzSize*0.35}`;
-           if (rightNub !== 0) {
-            pathD += ` c ${rightNub*pzSize*0.15} 0 ${rightNub*pzSize*0.2} ${pzSize*0.1} ${rightNub*pzSize*0.2} ${pzSize*0.15}`;
-            pathD += ` s ${-rightNub*pzSize*0.05} ${pzSize*0.15} 0 ${pzSize*0.15}`;
-            pathD += ` c 0 ${pzSize*0.05} ${-rightNub*pzSize*0.2} ${pzSize*0.15} ${-rightNub*pzSize*0.2} ${pzSize*0.15}`;
-          }
-          pathD += ` v ${pzSize*0.35}`;
-          // Bottom edge
-          pathD += ` h ${-pzSize*0.35}`;
-           if (bottomNub !== 0) {
-            pathD += ` c 0 ${bottomNub*pzSize*0.15} ${-pzSize*0.1} ${bottomNub*pzSize*0.2} ${-pzSize*0.15} ${bottomNub*pzSize*0.2}`;
-            pathD += ` s ${-pzSize*0.15} ${-bottomNub*pzSize*0.05} ${-pzSize*0.15} 0`;
-            pathD += ` c ${-pzSize*0.05} 0 ${-pzSize*0.15} ${-bottomNub*pzSize*0.2} ${-pzSize*0.15} ${-bottomNub*pzSize*0.2}`;
-          }
-          pathD += ` h ${-pzSize*0.35}`;
-          // Left edge
-          pathD += ` v ${-pzSize*0.35}`;
-          if (leftNub !== 0) {
-            pathD += ` c ${leftNub*pzSize*0.15} 0 ${leftNub*pzSize*0.2} ${-pzSize*0.1} ${leftNub*pzSize*0.2} ${-pzSize*0.15}`;
-            pathD += ` s ${-leftNub*pzSize*0.05} ${-pzSize*0.15} 0 ${-pzSize*0.15}`;
-            pathD += ` c 0 ${-pzSize*0.05} ${-leftNub*pzSize*0.2} ${-pzSize*0.15} ${-leftNub*pzSize*0.2} ${-pzSize*0.15}`;
-          }
-          pathD += ` Z`;
-
-          puzzleGrid.push(`<path d="${pathD}" stroke="#E0E0E0" stroke-width="1" fill="#F0F0F0"/>`);
+          eyeSymbols.push(`<ellipse cx=\"${x}\" cy=\"${y}\" rx=\"${eyeRX}\" ry=\"${eyeRY}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+          eyeSymbols.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${pupilR}\" fill=\"#E0E0E0\"/>`);
         }
-      }
-      pattern = `
-        <g>
-          ${puzzleGrid.join('\\n')}
-        </g>
-      `;
-      break;
+        pattern = `
+          <g>
+            ${eyeSymbols.join('\\n')}
+          </g>
+        `;
+        break;
+      } // <-- Added closing brace
 
-    default: {
-      // Default to grid pattern
-      // ... existing code ...
+      case 'PuzzleGrid': { // <-- Added opening brace
+        // Puzzle Grid pattern
+        const puzzleGrid = [];
+        const pzSize = 40; // Size of each puzzle piece
+
+        for (let row = 0; row < Math.ceil(frame.height / pzSize); row++) {
+          for (let col = 0; col < Math.ceil(frame.width / pzSize); col++) {
+            const x = col * pzSize;
+            const y = row * pzSize;
+            
+            // Define nub positions (0:none, 1:out, -1:in) pseudo-randomly based on pos
+            const topNub = (row > 0) ? (((col + row*3) % 3) - 1) : 0;
+            const rightNub = (col < Math.ceil(frame.width / pzSize) - 1) ? (((col*3 + row) % 3) - 1) : 0;
+            const bottomNub = (row < Math.ceil(height / pzSize) - 1) ? -topNub : 0; // Ensure matching nub
+            const leftNub = (col > 0) ? -((((col-1)*3 + row) % 3) - 1) : 0; // Ensure matching nub from left
+
+            const nW = pzSize * 0.2; // Nub width based on piece size
+            const nH = pzSize * 0.15; // Nub height based on piece size
+            const c = 0.551915 * nH * 0.5; // Control point calculation factor for circular nub approx
+
+            let pathD = `M ${x} ${y}`;
+
+            // Top Edge
+            pathD += ` l ${pzSize*0.35} 0`;
+            if (topNub !== 0) {
+              pathD += ` l 0 ${-topNub*nH*0.5}`; // Start of nub curve
+              pathD += ` c ${nW*0.25} ${-topNub*nH*0.4} ${nW*0.75} ${-topNub*nH*0.4} ${nW} 0`; // Nub arc
+              pathD += ` l 0 ${topNub*nH*0.5}`; // End of nub curve
+            }
+            pathD += ` l ${pzSize*0.35} 0`; // To top-right corner
+
+            // Right Edge
+            pathD += ` l 0 ${pzSize*0.35}`;
+             if (rightNub !== 0) {
+              pathD += ` l ${rightNub*nH*0.5} 0`;
+              pathD += ` c ${rightNub*nH*0.4} ${nW*0.25} ${rightNub*nH*0.4} ${nW*0.75} 0 ${nW}`;
+              pathD += ` l ${-rightNub*nH*0.5} 0`;
+            }
+            pathD += ` l 0 ${pzSize*0.35}`; // To bottom-right corner
+
+            // Bottom Edge
+            pathD += ` l ${-pzSize*0.35} 0`;
+             if (bottomNub !== 0) {
+              pathD += ` l 0 ${bottomNub*nH*0.5}`;
+              pathD += ` c ${-nW*0.25} ${bottomNub*nH*0.4} ${-nW*0.75} ${bottomNub*nH*0.4} ${-nW} 0`;
+              pathD += ` l 0 ${-bottomNub*nH*0.5}`;
+            }
+            pathD += ` l ${-pzSize*0.35} 0`; // To bottom-left corner
+
+            // Left Edge
+            pathD += ` l 0 ${-pzSize*0.35}`;
+            if (leftNub !== 0) {
+              pathD += ` l ${-leftNub*nH*0.5} 0`;
+              pathD += ` c ${-leftNub*nH*0.4} ${-nW*0.25} ${-leftNub*nH*0.4} ${-nW*0.75} 0 ${-nW}`;
+              pathD += ` l ${leftNub*nH*0.5} 0`;
+            }
+            pathD += ` Z`; // Close path (back to top-left)
+
+            puzzleGrid.push(`<path d="${pathD}" stroke="#E0E0E0" stroke-width="1" fill="#F0F0F0"/>`);
+          }
+        }
+        pattern = `
+          <g>
+            ${puzzleGrid.join('')}
+          </g>
+        `;
+        break;
+      } // <-- Added closing brace
+
+      // ------------------- NEW PATTERNS START (Batch 2) -------------------
+
+      // Visual Texture / Noise
+      case 'GrainNoise': {
+        // Generate SVG for Grain Noise using small, semi-transparent circles
+        const grains = [];
+        const numGrains = Math.floor((width * height) / 150); // Further reduced density
+        for (let i = 0; i < numGrains; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const r = 0.5 + Math.random() * 1;
+          const opacity = 0.05 + Math.random() * 0.15;
+          grains.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#808080" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${grains.join('\n')}</g>`;
+        break;
+      }
+
+      case 'StaticTVDots': {
+        // Generate SVG for Static TV Dots with random dots and occasional lines
+        const elements = [];
+        const numDots = Math.floor((width * height) / 200); // Further reduced density
+        for (let i = 0; i < numDots; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const r = 1 + Math.random() * 1.5;
+          const opacity = 0.1 + Math.random() * 0.6;
+          elements.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#999999" fill-opacity="${opacity}"/>`);
+          // Add occasional horizontal line artifact
+          if (Math.random() < 0.02) {
+            const lineWidth = width * (0.1 + Math.random() * 0.4);
+            const lineX = Math.random() * width * 0.6;
+            elements.push(`<rect x="${lineX}" y="${y - 0.5}" width="${lineWidth}" height="1" fill="#FFFFFF" fill-opacity="0.4"/>`);
+          }
+        }
+        pattern = `<g>${elements.join('\n')}</g>`;
+        break;
+      }
+
+      case 'SpeckledInk': {
+        // Generate SVG for Speckled Ink with varying dot sizes
+        const speckles = [];
+        const numSpeckles = Math.floor((width * height) / 300); // Further reduced density
+        for (let i = 0; i < numSpeckles; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const r = 1 + Math.random() * 2; // Size variation
+          const opacity = 0.2 + Math.random() * 0.7;
+          speckles.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#333333" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${speckles.join('\n')}</g>`;
+        break;
+      }
+
+      case 'BlurWaves': {
+         // Generate SVG for Blur Waves - Simplified SVG, rely on fallback
+         pattern = `
+            <rect width="100%" height="100%" fill="#E0E8F0" />
+            <text x="10" y="20" font-size="10" fill="#AAAAAA">Blur Waves (Fallback)</text>
+          `; // Placeholder SVG
+        break;
+      }
+
+      case 'DustFlecks': {
+        // Generate SVG for Dust Flecks - very small, sparse dots
+        const flecks = [];
+        const numFlecks = Math.floor((width * height) / 400); // Further reduced density
+        for (let i = 0; i < numFlecks; i++) {
+          const x = Math.random() * width;
+          const y = Math.random() * height;
+          const r = 0.4 + Math.random() * 0.8; // Smaller size
+          const opacity = 0.1 + Math.random() * 0.4;
+          flecks.push(`<circle cx="${x}" cy="${y}" r="${r}" fill="#B3B3B3" fill-opacity="${opacity}"/>`);
+        }
+        pattern = `<g>${flecks.join('\n')}</g>`;
+        break;
+      }
+
+      case 'PaperCrinkleLines': {
+        // Generate SVG for Paper Crinkle Lines using slightly randomized paths
+        const lines = [];
+        const numLines = 15;
+        for (let i = 0; i < numLines; i++) {
+          const numPoints = 5 + Math.floor(Math.random() * 10);
+          const startX = Math.random() * width;
+          const startY = Math.random() * height;
+          const endX = startX + (Math.random() - 0.5) * width * 0.4;
+          const endY = startY + (Math.random() - 0.5) * height * 0.4;
+          let pathD = `M ${startX} ${startY}`;
+          for (let j = 1; j < numPoints; j++) {
+            const t = j / (numPoints - 1);
+            const currentX = startX + (endX - startX) * t + (Math.random() - 0.5) * 20;
+            const currentY = startY + (endY - startY) * t + (Math.random() - 0.5) * 20;
+            pathD += ` L ${currentX} ${currentY}`;
+          }
+          const strokeWidth = 0.4 + Math.random() * 0.6;
+          const opacity = 0.3 + Math.random() * 0.4;
+          lines.push(`<path d="${pathD}" stroke="#D9D9D9" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${lines.join('\n')}</g>`;
+        break;
+      }
+
+      // Motion / Flow
+      case 'SwirlVortex': {
+        // Generate SVG for Swirl Vortex using spiral paths
+        const arms = [];
+        const numArms = 3 + Math.floor(Math.random() * 3);
+        const centerX = width / 2;
+        const centerY = height / 2;
+        const maxRadius = Math.min(width, height) * 0.5;
+
+        for (let i = 0; i < numArms; i++) {
+          const pointsPerArm = 40;
+          const angleOffset = (i / numArms) * Math.PI * 2;
+          const twistFactor = 5 + Math.random() * 5;
+          let pathD = `M ${centerX} ${centerY}`;
+          for (let j = 1; j < pointsPerArm; j++) {
+            const radius = (j / pointsPerArm) * maxRadius;
+            const angle = angleOffset + (j / pointsPerArm) * twistFactor;
+            const x = centerX + Math.cos(angle) * radius;
+            const y = centerY + Math.sin(angle) * radius;
+            pathD += ` L ${x} ${y}`;
+          }
+          const strokeWidth = 0.5 + Math.random() * 1.5;
+          const opacity = 0.5 + Math.random() * 0.3;
+          arms.push(`<path d="${pathD}" stroke="#CCCCCC" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${arms.join('\n')}</g>`;
+        break;
+      }
+
+      case 'TiltedStripes': {
+        // Generate SVG for Tilted Stripes using rotated rects
+        const stripes = [];
+        const numStripes = 25;
+        const stripeWidth = 4;
+        const stripeLength = Math.max(width, height) * 1.5;
+        for (let i = 0; i < numStripes; i++) {
+          const centerX = width / 2;
+          const centerY = height * ( (i+0.5) / numStripes );
+          const x = centerX - stripeLength / 2;
+          const y = centerY - stripeWidth / 2;
+          const rotation = 30 + (Math.random() - 0.5) * 20; // Base tilt + variation
+          stripes.push(`<rect x="${x}" y="${y}" width="${stripeLength}" height="${stripeWidth}" fill="#E0E0E0" transform="rotate(${rotation} ${centerX} ${centerY})"/>`);
+        }
+        pattern = `<g>${stripes.join('\n')}</g>`;
+        break;
+      }
+
+      case 'StreamLines': {
+        // Generate SVG for Stream Lines using curved paths
+        const lines = [];
+        const numLines = 12;
+        for (let i = 0; i < numLines; i++) {
+          const startY = (i / numLines) * height * 1.1 - height * 0.05;
+          const endY = startY + (Math.random() - 0.5) * height * 0.4;
+          const midX1 = width * (0.2 + Math.random() * 0.2);
+          const midY1 = startY + (Math.random() - 0.5) * height * 0.3;
+          const midX2 = width * (0.6 + Math.random() * 0.2);
+          const midY2 = startY + (Math.random() - 0.5) * height * 0.3;
+          const startX = -width * 0.05;
+          const endX = width * 1.05;
+          const cp1X = startX + (midX1 - startX) * 1.5;
+          const cp1Y = startY + (midY1 - startY) * 1.5;
+          const cp2X = endX + (midX2 - endX) * 1.5;
+          const cp2Y = endY + (midY2 - endY) * 1.5;
+
+          const pathD = `M ${startX} ${startY} C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${endX} ${endY}`;
+          const strokeWidth = 0.5 + Math.random() * 1;
+          const opacity = 0.4 + Math.random() * 0.4;
+          lines.push(`<path d="${pathD}" stroke="#CCD9E6" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+        }
+        pattern = `<g>${lines.join('\n')}</g>`;
+        break;
+      }
+
+      case 'SineWaves': {
+        // Generate SVG for Sine Waves using path elements
+        const waves = [];
+        const numWaves = Math.ceil(height / 25);
+        const amplitude = 8;
+        const frequency = 0.04;
+
+        for (let i = 0; i < numWaves; i++) {
+          const yOffset = (i + 0.5) * 25;
+          let pathD = `M 0 ${yOffset + Math.sin(0 + i * 0.5) * amplitude}`;
+          const pointsPerWave = Math.ceil(width / 8);
+          for (let j = 1; j <= pointsPerWave; j++) {
+             const x = (j / pointsPerWave) * width;
+             const y = yOffset + Math.sin(x * frequency + i * 0.5) * amplitude;
+             pathD += ` L ${x} ${y}`;
+          }
+          waves.push(`<path d="${pathD}" stroke="#D9D9D9" stroke-width="1" fill="none"/>`);
+        }
+        pattern = `<g>${waves.join('\n')}</g>`;
+        break;
+      }
+
+      case 'ExpandingCircles': {
+        // Generate SVG for Expanding Circles
+        const sets = [];
+        const numSets = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < numSets; i++) {
+          const centerX = width * (0.1 + Math.random() * 0.8);
+          const centerY = height * (0.1 + Math.random() * 0.8);
+          const maxRadius = 30 + Math.random() * 40;
+          const numCircles = 5 + Math.floor(Math.random() * 4);
+          for (let j = 0; j < numCircles; j++) {
+            const radius = ( (j+1) / numCircles ) * maxRadius;
+            const strokeWidth = 0.5 + Math.random();
+            const opacity = 1 - (j / numCircles) * 0.7; // Fade out
+            sets.push(`<circle cx="${centerX}" cy="${centerY}" r="${radius}" stroke="#E5E5E5" stroke-width="${strokeWidth}" stroke-opacity="${opacity}" fill="none"/>`);
+          }
+        }
+        pattern = `<g>${sets.join('\n')}</g>`;
+        break;
+      }
+
+      // ------------------- NEW PATTERNS END (Batch 2) -------------------
+
+      case 'StickyNote': {
+        const notes = [];
+        const noteSize = 60;
+        const spacing = noteSize * 0.8;
+        const colors = ["#FDF8B4", "#E0E0E0"]; // Yellowish, Grayish
+        for (let row = 0; row * spacing < frame.height + noteSize; row++) {
+          for (let col = 0; col * spacing < frame.width + noteSize; col++) {
+            const x = col * spacing + (Math.random() - 0.5) * 10 - noteSize / 2;
+            const y = row * spacing + (Math.random() - 0.5) * 10 - noteSize / 2;
+            const rotation = (Math.random() - 0.5) * 15;
+            notes.push(`
+              <rect x="${x}" y="${y}" width="${noteSize}" height="${noteSize}" 
+                    rx="4" ry="4" 
+                    fill="${colors[(row + col) % 2]}" fill-opacity="0.8" 
+                    stroke="#B0B0B0" stroke-width="0.5" stroke-opacity="0.5" 
+                    transform="rotate(${rotation} ${x + noteSize/2} ${y + noteSize/2})"/>
+            `);
+          }
+        }
+        pattern = `<g>${notes.join('\\n')}</g>`;
+        break;
+      }
+      case 'Perlin': {
+        // Use feTurbulence for Perlin noise effect - Simplified SVG, rely on fallback
+        pattern = `
+          <rect width="100%" height="100%" fill="#F0F0F0" />
+          <text x="10" y="20" font-size="10" fill="#AAAAAA">Perlin Noise (Fallback)</text>
+        `; // Placeholder SVG
+        break;
+      }
+      case 'Marble': {
+        // Use turbulence + displacement for marble effect - Simplified SVG, rely on fallback
+        pattern = `
+          <rect width="100%" height="100%" fill="#E5E5E5" />
+          <line x1="10" y1="10" x2="${width - 10}" y2="${height - 10}" stroke="#CCCCCC" stroke-width="2"/>
+          <line x1="10" y1="${height - 10}" x2="${width - 10}" y2="10" stroke="#CCCCCC" stroke-width="2"/>
+          <text x="10" y="20" font-size="10" fill="#AAAAAA">Marble (Fallback)</text>
+        `; // Placeholder SVG
+        break;
+      }
+      case 'Mesh': {
+        const meshLines = [];
+        const gridSize = 80; // Further increased grid size
+        const distortion = 8; // Further reduced distortion
+
+        // Horizontal lines
+        for (let y = 0; y <= frame.height; y += gridSize) {
+          let pathD = `M 0 ${y + (Math.random() - 0.5) * distortion}`;
+          for (let x = gridSize; x <= frame.width; x += gridSize) {
+            const currentY = y + (Math.random() - 0.5) * distortion;
+            const prevX = x - gridSize;
+            const prevY = parseFloat(pathD.substring(pathD.lastIndexOf(' ')+1)); // Risky, assumes last point Y
+            const cp1X = prevX + gridSize * 0.3;
+            const cp1Y = prevY + (Math.random() - 0.5) * distortion * 0.5;
+            const cp2X = x - gridSize * 0.3;
+            const cp2Y = currentY + (Math.random() - 0.5) * distortion * 0.5;
+            pathD += ` C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${x} ${currentY}`;
+          }
+          meshLines.push(`<path d="${pathD}" stroke="#C8C8C8" stroke-width="0.8" fill="none"/>`);
+        }
+        // Vertical lines
+         for (let x = 0; x <= frame.width; x += gridSize) {
+           let pathD = `M ${x + (Math.random() - 0.5) * distortion} 0`;
+           for (let y = gridSize; y <= frame.height; y += gridSize) {
+             const currentX = x + (Math.random() - 0.5) * distortion;
+             const prevY = y - gridSize;
+             const prevX = parseFloat(pathD.substring(pathD.lastIndexOf(' ')+1)); // Risky, assumes last point X
+             const cp1X = prevX + (Math.random() - 0.5) * distortion * 0.5;
+             const cp1Y = prevY + gridSize * 0.3;
+             const cp2X = currentX + (Math.random() - 0.5) * distortion * 0.5;
+             const cp2Y = y - gridSize * 0.3;
+             pathD += ` C ${cp1X} ${cp1Y}, ${cp2X} ${cp2Y}, ${currentX} ${y}`;
+           }
+           meshLines.push(`<path d="${pathD}" stroke="#C8C8C8" stroke-width="0.8" fill="none"/>`);
+         }
+        pattern = `<g>${meshLines.join('\\n')}</g>`;
+        break;
+      }
+
+      default: {
+        // Default to grid pattern
+        // ... existing code ...
+      }
     }
+    
+    return svgStart + pattern + svgEnd;
   }
-  
-  return svgStart + pattern + svgEnd;
-}
