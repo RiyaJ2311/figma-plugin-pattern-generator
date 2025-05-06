@@ -502,408 +502,22 @@
       { type: 'ExpandingCircles', name: 'Expanding Circles' },
     ];
 
-    // Function to generate preview SVG (Simplified for UI performance)
-    function generatePreviewSVG(patternType, width = 80, height = 60, options = {}) {
-        // Process options
-        const color = options.color || '#E0E0E0';
-        const opacity = options.opacity !== undefined ? options.opacity : 0.8;
-        
-      const svgStart = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
-      const svgEnd = '</svg>';
-        let pattern = ''; // No default background
-      
-        // Basic previews - you might want to enhance these
-      switch (patternType) {
-        case 'Grid':
-          pattern = `
-              <g stroke="${color}" stroke-width="1" opacity="${opacity}">
-                ${Array.from({ length: 3 }, (_, i) => `<line x1="${(i+1)*width/4}" y1="0" x2="${(i+1)*width/4}" y2="${height}"/>`).join('')}
-                ${Array.from({ length: 2 }, (_, i) => `<line x1="0" y1="${(i+1)*height/3}" x2="${width}" y2="${(i+1)*height/3}"/>`).join('')}
-                </g>`;
-          break;
-        case 'Dots':
-            pattern = `<g fill="${color}" opacity="${opacity}">`;
-            for(let i=0; i<5; i++) { for(let j=0; j<4; j++) { pattern += `<circle cx="${(i+0.5)*width/5}" cy="${(j+0.5)*height/4}" r="2"/>`; } }
-            pattern += `</g>`;
-          break;
-        case 'Circles':
-            pattern = `<g fill="${color}" opacity="${opacity}">`;
-             for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-                const cx = (i+0.5)*width/2; const cy = (j+0.5)*height/2;
-                pattern += `<circle cx="${cx}" cy="${cy}" r="15" fill-opacity="0.5"/>`;
-                pattern += `<circle cx="${cx}" cy="${cy}" r="8" fill-opacity="0.8"/>`;
-             }}
-             pattern += `</g>`;
-          break;
-        case 'Waves':
-             pattern = `<g stroke="${color}" stroke-width="2" fill="none" opacity="${opacity}">`;
-             for (let i = 0; i < 2; i++) {
-               const y = (i + 0.5) * height / 2;
-               pattern += `<path d="M0 ${y} C ${width*0.2} ${y-5}, ${width*0.3} ${y+5}, ${width*0.5} ${y} C ${width*0.7} ${y-5}, ${width*0.8} ${y+5}, ${width} ${y}"/>`;
-             }
-             pattern += `</g>`;
-          break;
-        case 'Lines':
-             pattern = `<g stroke="${color}" stroke-width="1" opacity="${opacity}">`;
-             for (let i = -3; i < 5; i++) {
-                 pattern += `<line x1="${i*width/4}" y1="0" x2="${i*width/4 + height}" y2="${height}"/>`;
-             }
-             pattern += `</g>`;
-          break;
-        case 'AbstractWaves':
-             pattern = `<g fill="${color}" opacity="${opacity}">`;
-             for(let i = 0; i < 3; i++) {
-                pattern += `<rect x="-10" y="${(i+0.3)*height/3}" width="${width+20}" height="3" transform="rotate(${Math.sin(i*1.5)*5} ${width/2} ${ (i+0.5)*height/3})"/>`;
-             }
-             pattern += `</g>`;
-          break;
-        case 'Snow':
-             pattern = `<g fill="${color}" opacity="${opacity}">`;
-             for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-                 const x = (i+0.5)*width/3; const y = (j+0.5)*height/2;
-                 if((i+j)%2===0){ pattern += `<rect x="${x-1}" y="${y-4}" width="2" height="8"/> <rect x="${x-4}" y="${y-1}" width="8" height="2"/>`;}
-                 else { pattern += `<circle cx="${x}" cy="${y}" r="2"/>`;}
-             }}
-             pattern += `</g>`;
-          break;
-        case 'Stars':
-             pattern = `<g stroke="${color}" stroke-width="1" opacity="${opacity}">`;
-             for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-                const x = (i+0.5)*width/3; const y = (j+0.5)*height/2;
-                 for(let k=0; k<4; k++) { const a=k*Math.PI/2; pattern += `<line x1="${x}" y1="${y}" x2="${x+5*Math.cos(a)}" y2="${y+5*Math.sin(a)}"/>`; }
-             }}
-             pattern += `</g>`;
-          break;
-          case 'Crosses':
-             pattern = `<g fill="${color}" opacity="${opacity}">`;
-              for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-                const x = (i+0.5)*width/3; const y = (j+0.5)*height/2;
-                pattern += `<rect x="${x-1}" y="${y-5}" width="2" height="10"/> <rect x="${x-5}" y="${y-1}" width="10" height="2"/>`;
-              }}
-              pattern += `</g>`;
-          break;
-         // --- Start Add simplified previews for patterns needing it ---
-         case 'Perlin':
-           // Perlin Noise Preview (approximated with dots)
-           let perlinDots = `<g fill="${color}" opacity="${opacity}">`;
-           const pDotCount = 150; // Reasonable density for preview
-           for (let i = 0; i < pDotCount; i++) {
-             const x = Math.random() * width;
-             const y = Math.random() * height;
-             const r = 0.5 + Math.random() * 1;
-             perlinDots += `<circle cx="${x}" cy="${y}" r="${r}"/>`;
-           }
-           perlinDots += '</g>';
-           pattern = perlinDots;
-          break;
-          
-         case 'Marble':
-           // Marble Preview (approximated with wavy lines)
-           let marbleLines = `<g stroke="${color}" stroke-width="1.5" fill="none" opacity="${opacity}">`;
-           const mLineCount = 6;
-           for (let i = 0; i < mLineCount; i++) {
-             const yOffset = (height / mLineCount) * (i + 0.5);
-             marbleLines += `<path d="M0 ${yOffset} Q ${width*0.3} ${yOffset + (Math.random()-0.5)*15}, ${width*0.6} ${yOffset + (Math.random()-0.5)*15}, ${width} ${yOffset}"/>`;
-           }
-           marbleLines += '</g>';
-           pattern = marbleLines;
-          break;
-          
-         case 'BlurWaves':
-           // Blur Waves Preview (approximated with soft rectangles)
-            pattern = `<g opacity="${opacity}">`;
-            for(let i = 0; i < 3; i++) {
-              pattern += `<rect x="-10" y="${(i+0.3)*height/3}" width="${width+20}" height="10" fill="${color}" transform="rotate(${Math.sin(i*1.5)*5} ${width/2} ${ (i+0.5)*height/3})"/>`;
-            }
-            pattern += `</g>`;
-          break;
-          
-         case 'Mesh':
-            pattern = `<g stroke="${color}" stroke-width="0.8" fill="none" opacity="${opacity}">`;
-            const gridCols = 4;
-            const gridRows = 3;
-             for(let i=0; i <= gridCols; i++) { pattern += `<line x1="${i*width/gridCols}" y1="0" x2="${i*width/gridCols}" y2="${height}"/>`; }
-             for(let j=0; j <= gridRows; j++) { pattern += `<line x1="0" y1="${j*height/gridRows}" x2="${width}" y2="${j*height/gridRows}"/>`; }
-            pattern += `</g>`;
-          break;
-         // --- End Add simplified previews ---
-          
-         // --- Add more pattern previews for thumbnails ---
-        case 'TinyTriangles':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<4; i++) { for(let j=0; j<3; j++) {
-             const x = (i+0.5)*width/4; const y = (j+0.5)*height/3;
-             pattern += `<polygon points="${x},${y-3} ${x+3},${y+2} ${x-3},${y+2}" />`;
-           }}
-           pattern += `</g>`;
-          break;
-          
-        case 'CircleScatter':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<5; i++) {
-             const x = 10 + Math.random() * (width-20);
-             const y = 10 + Math.random() * (height-20);
-             const r = 2 + Math.random() * 4;
-             pattern += `<circle cx="${x}" cy="${y}" r="${r}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'HexGrid':
-        case 'HexagonGrid':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           const hexSize = 12;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<polygon points="${x},${y-hexSize} ${x+hexSize*0.866},${y-hexSize*0.5} ${x+hexSize*0.866},${y+hexSize*0.5} ${x},${y+hexSize} ${x-hexSize*0.866},${y+hexSize*0.5} ${x-hexSize*0.866},${y-hexSize*0.5}" />`;
-           }}
-           pattern += `</g>`;
-          break;
-          
-        case 'Chevrons':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i * height/3 + height/6;
-             pattern += `<polyline points="0,${y-5} ${width/2},${y+5} ${width},${y-5}" />`;
-           }
-           pattern += `</g>`;
-           break;
-          
-        case 'SquareTiles':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           const sqSize = 15;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<rect x="${x-sqSize/2}" y="${y-sqSize/2}" width="${sqSize}" height="${sqSize}" />`;
-           }}
-           pattern += `</g>`;
-          break;
-          
-        case 'WaveDots':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<width; i+=width/8) {
-             const y = height/2 + Math.sin(i/10) * 10;
-             pattern += `<circle cx="${i}" cy="${y}" r="2" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-        case 'ConcentricCircles':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           const centerX = width/2;
-           const centerY = height/2;
-           for(let r=5; r<Math.min(width, height)/2; r+=8) {
-             pattern += `<circle cx="${centerX}" cy="${centerY}" r="${r}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-        case 'ThinXMarks':
-           pattern = `<g stroke="${color}" stroke-width="0.8" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<line x1="${x-5}" y1="${y-5}" x2="${x+5}" y2="${y+5}" />`;
-             pattern += `<line x1="${x-5}" y1="${y+5}" x2="${x+5}" y2="${y-5}" />`;
-           }}
-           pattern += `</g>`;
-          break;
-          
-        case 'OvalGrid':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             if((i+j)%2===0) {
-               pattern += `<ellipse cx="${x}" cy="${y}" rx="10" ry="6" />`;
-             } else {
-               pattern += `<ellipse cx="${x}" cy="${y}" rx="6" ry="10" />`;
-             }
-           }}
-           pattern += `</g>`;
-          break;
-          
-        case 'AngledLines':
-           pattern = `<g stroke="#D0D0D0">`;
-           for(let i=0; i<4; i++) {
-             const offset = i * width/4;
-             pattern += `<line x1="${offset}" y1="0" x2="${offset+width/4}" y2="${height}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-        case 'SpiralDots':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           const centerX2 = width/2;
-           const centerY2 = height/2;
-           for(let i=0; i<5; i++) {
-             const angle = i * Math.PI * 0.4;
-             const dist = i * 5;
-             const x = centerX2 + Math.cos(angle) * dist;
-             const y = centerY2 + Math.sin(angle) * dist;
-             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-        case 'DashedLines':
-           pattern = `<g stroke="#D0D0D0" stroke-dasharray="4,4">`;
-           for(let i=1; i<4; i++) {
-             const y = i * height/4;
-             pattern += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-        case 'ScatteredSquares':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<6; i++) {
-             const x = 10 + Math.random() * (width-20);
-             const y = 10 + Math.random() * (height-20);
-             const size = 2 + Math.random() * 4;
-             pattern += `<rect x="${x-size/2}" y="${y-size/2}" width="${size}" height="${size}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'HalfDiamonds':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<path d="M${x},${y-8} L${x+8},${y} L${x},${y+8} Z" />`;
-           }}
-           pattern += `</g>`;
-          break;
-          
-         // Additional patterns from the new list
-         case 'GrainNoise':
-           pattern = `<g fill="#D0D0D0" opacity="0.6">`;
-           for(let i=0; i<150; i++) {
-             const x = Math.random() * width;
-             const y = Math.random() * height;
-             pattern += `<rect x="${x}" y="${y}" width="1" height="1" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'StaticTVDots':
-           pattern = `<g fill="#D0D0D0">`;
-           for(let i=0; i<100; i++) {
-             const x = Math.random() * width;
-             const y = Math.random() * height;
-             const opacity = Math.random() * 0.7;
-             pattern += `<circle cx="${x}" cy="${y}" r="1" opacity="${opacity}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'SpeckledInk':
-           pattern = `<g fill="#D0D0D0">`;
-           for(let i=0; i<40; i++) {
-             const x = Math.random() * width;
-             const y = Math.random() * height;
-             const size = 1 + Math.random() * 3;
-             pattern += `<circle cx="${x}" cy="${y}" r="${size}" opacity="0.7" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'DustFlecks':
-           pattern = `<g fill="#D0D0D0">`;
-           for(let i=0; i<30; i++) {
-             const x = Math.random() * width;
-             const y = Math.random() * height;
-             const size = 0.5 + Math.random() * 1.5;
-             pattern += `<circle cx="${x}" cy="${y}" r="${size}" opacity="0.6" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'CrinkleLines':
-         case 'PaperCrinkleLines':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           for(let i=0; i<4; i++) {
-             let path = `<path d="M0,${i*15+10} `;
-             for(let x=0; x<width; x+=width/8) {
-               const y = i*15+10 + (Math.random()-0.5)*5;
-               path += `L${x},${y} `;
-             }
-             path += `L${width},${i*15+10}" />`;
-             pattern += path;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'SwirlVortex':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           const cx = width/2, cy = height/2;
-           for(let i=0; i<4; i++) {
-             const r = 5 + i*8;
-             pattern += `<path d="M${cx-r},${cy} A${r},${r} 0 1,1 ${cx+r},${cy}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'TiltedStripes':
-           pattern = `<g stroke="#D0D0D0" stroke-width="1.5">`;
-           for(let i=-2; i<6; i++) {
-             pattern += `<line x1="${i*15}" y1="0" x2="${i*15+width/2}" y2="${height}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'StreamLines':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           for(let i=0; i<5; i++) {
-             let path = `<path d="M0,${i*height/5+height/10} `;
-             for(let x=width/4; x<width; x+=width/4) {
-               const offset = Math.sin(x/width*Math.PI) * 8;
-               path += `Q${x-width/8},${i*height/5+height/10+offset} ${x},${i*height/5+height/10} `;
-             }
-             path += `" />`;
-             pattern += path;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'SineWaves':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           for(let i=0; i<3; i++) {
-             let path = `<path d="M0,${i*height/3+height/6} `;
-             for(let x=0; x<width; x+=width/20) {
-               const y = i*height/3+height/6 + Math.sin(x/width*Math.PI*4) * 8;
-               path += `L${x},${y} `;
-             }
-             path += `" />`;
-             pattern += path;
-           }
-           pattern += `</g>`;
-          break;
-          
-         case 'ExpandingCircles':
-           pattern = `<g stroke="#D0D0D0" fill="none">`;
-           const cxExp = width/2, cyExp = height/2;
-           for(let i=1; i<=3; i++) {
-             pattern += `<circle cx="${cxExp}" cy="${cyExp}" r="${i*12}" />`;
-           }
-           pattern += `</g>`;
-          break;
-          
-         // ... existing code for default case ...
-          default:
-            // Fallback simple preview
-             pattern += `<text x="10" y="${height/2 + 4}" font-size="10" fill="#999">${patternType}</text>`;
-          break;
+    // Placeholder thumbnail while waiting for real SVG
+    const placeholderThumb = 'data:image/svg+xml;base64,' + btoa('<svg width="80" height="60" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#f5f5f5"/></svg>');
+    // Catch full SVG previews from plugin
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg?.type === 'pattern-preview') {
+        const { patternType, dataUrl } = msg;
+        // Update grid thumb
+        const thumb = document.querySelector(`.pattern-item[data-type="${patternType}"] img`);
+        if (thumb) thumb.src = dataUrl;
+        // Update customization if active
+        if (currentPatternType === patternType && selectedPatternPreviewImg) {
+          selectedPatternPreviewImg.src = dataUrl;
         }
-        
-        const fullSVG = svgStart + pattern + svgEnd;
-        // Use btoa to base64 encode SVG preview for compatibility
-        return 'data:image/svg+xml;base64,' + btoa(fullSVG);
-    }
-
+      }
+    };
 
     // Populate Pattern Grid
     patterns.forEach(p => {
@@ -912,7 +526,7 @@
       patternItem.dataset.type = p.type;
 
       const img = document.createElement('img');
-      img.src = generatePreviewSVG(p.type); // Generate and set preview
+      img.src = placeholderThumb; // Set placeholder; real preview will arrive via plugin message
       img.alt = p.name;
 
       const span = document.createElement('span');
@@ -933,8 +547,8 @@
       });
 
       patternsGrid.appendChild(patternItem);
-      // Request full SVG preview from plugin
-      parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType: p.type, width: 80, height: 60 } }, '*');
+      // Request full SVG thumbnail
+      parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType: p.type, width: 80, height: 60 }}, '*');
     });
     
     // Function to switch to customization view
@@ -948,14 +562,15 @@
     
        selectedPatternName.textContent = `Customize: ${patternName}`; // Update title
        
-       // Store current pattern type
        currentPatternType = patternType;
        
-       // Request full SVG preview for customization
+       // Set placeholder
+       selectedPatternPreviewImg.src = placeholderThumb;
+       // Request full SVG for customization
        parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType, width: 80, height: 80, options: {
          density: parseInt(densitySlider.value,10), size: parseInt(sizeSlider.value,10), opacity: parseInt(opacitySlider.value,10)/100, color: colorPicker.value
        } } }, '*');
-       
+
        // Reset controls to defaults
        densitySlider.value = 50; densityValue.textContent = '50';
        sizeSlider.value = 50; sizeValue.textContent = '50';
@@ -1046,21 +661,6 @@
     cancelButton.addEventListener('click', () => {
       parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
     });
-
-    // Listen for generated SVG previews from plugin
-    window.onmessage = (event) => {
-      const msg = event.data.pluginMessage;
-      if (msg.type === 'pattern-preview') {
-        const { patternType, dataUrl } = msg;
-        // Update grid thumbnail
-        const thumb = document.querySelector(`.pattern-item[data-type="${patternType}"] img`);
-        if (thumb) thumb.src = dataUrl;
-        // Update customization preview if open
-        if (currentPatternType === patternType && selectedPatternPreviewImg) {
-          selectedPatternPreviewImg.src = dataUrl;
-        }
-      }
-    };
 
   </script>
 </body>
