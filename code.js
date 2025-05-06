@@ -120,6 +120,93 @@ figma.ui.onmessage = async (msg) => {
           </svg>`;
           break;
           
+        case 'CircleScatter':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <circle cx="${width*0.2}" cy="${height*0.3}" r="3" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.5}" cy="${height*0.2}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.8}" cy="${height*0.4}" r="4" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.3}" cy="${height*0.7}" r="3.5" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.6}" cy="${height*0.6}" r="2.5" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.9}" cy="${height*0.8}" r="3" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.1}" cy="${height*0.5}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.7}" cy="${height*0.9}" r="4" fill="${color}" opacity="${opacity}"/>
+            </g>
+          </svg>`;
+          break;
+
+        case 'SquareTiles':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="squares" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect x="1" y="1" width="18" height="18" stroke="${color}" fill="none" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#squares)"/>
+          </svg>`;
+          break;
+
+        case 'WaveDots':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <g>
+              <circle cx="${width*0.1}" cy="${height*0.3}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.2}" cy="${height*0.5}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.3}" cy="${height*0.7}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.4}" cy="${height*0.6}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.5}" cy="${height*0.4}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.6}" cy="${height*0.2}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.7}" cy="${height*0.3}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.8}" cy="${height*0.5}" r="2" fill="${color}" opacity="${opacity}"/>
+              <circle cx="${width*0.9}" cy="${height*0.7}" r="2" fill="${color}" opacity="${opacity}"/>
+            </g>
+          </svg>`;
+          break;
+
+        case 'ConcentricCircles':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="concentric" width="40" height="40" patternUnits="userSpaceOnUse">
+              <circle cx="20" cy="20" r="15" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+              <circle cx="20" cy="20" r="10" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+              <circle cx="20" cy="20" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#concentric)"/>
+          </svg>`;
+          break;
+
+        case 'ThinXMarks':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="xmarks" width="15" height="15" patternUnits="userSpaceOnUse">
+              <path d="M3,3 L12,12 M12,3 L3,12" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#xmarks)"/>
+          </svg>`;
+          break;
+
+        case 'Chevrons':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="chevrons" width="20" height="10" patternUnits="userSpaceOnUse">
+              <path d="M0,10 L10,0 L20,10" stroke="${color}" fill="none" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#chevrons)"/>
+          </svg>`;
+          break;
+          
+        case 'TinyMoons':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="moons" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M10,5 a5,5 0 1,0 0,10 a3,5 0 1,1 0,-10" fill="${color}" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#moons)"/>
+          </svg>`;
+          break;
+
+        case 'Arrowheads':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="arrows" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M5,10 L15,10 M10,5 L15,10 L10,15" stroke="${color}" fill="none" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#arrows)"/>
+          </svg>`;
+          break;
+          
         default:
           // For all other patterns, create a simplified representation
           svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">

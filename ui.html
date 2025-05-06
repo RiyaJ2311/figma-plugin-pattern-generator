@@ -190,7 +190,7 @@
 
     .control-group {
       display: grid;
-      grid-template-columns: auto 1fr auto; /* Label | Slider | Value */
+      grid-template-columns: auto 1fr auto auto; /* Label | Slider | Value | Visual */
       align-items: center;
       gap: 12px;
       padding: 8px 0;
@@ -234,8 +234,27 @@
     .control-group span {
       font-size: 12px;
       color: var(--figma-color-text-secondary);
-      min-width: 30px; /* Ensure space for value */
+      min-width: 40px; /* Ensure space for value */
       text-align: right;
+    }
+
+    /* Visual indicator for controls */
+    .control-indicator {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid var(--figma-color-border);
+      overflow: hidden;
+    }
+    
+    /* Special visual indicator for opacity */
+    .opacity-indicator {
+      background-image: linear-gradient(45deg, #ccc 25%, transparent 25%),
+                        linear-gradient(-45deg, #ccc 25%, transparent 25%),
+                        linear-gradient(45deg, transparent 75%, #ccc 75%),
+                        linear-gradient(-45deg, transparent 75%, #ccc 75%);
+      background-size: 8px 8px;
+      background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
     }
 
     input[type="color"] {
@@ -357,24 +376,22 @@
       
       <div class="controls-container">
         <div class="control-group">
-          <label for="density-slider">Density</label>
-          <input type="range" id="density-slider" min="1" max="100" value="50">
-          <span id="density-value">50</span>
-        </div>
-        <div class="control-group">
-          <label for="size-slider">Size</label>
+          <label for="size-slider">Size/Density</label>
           <input type="range" id="size-slider" min="1" max="100" value="50">
-          <span id="size-value">50</span>
+          <span id="size-value">50%</span>
+          <div class="control-indicator" id="size-indicator" style="transform: scale(0.5);"></div>
         </div>
         <div class="control-group">
           <label for="opacity-slider">Opacity</label>
           <input type="range" id="opacity-slider" min="0" max="100" value="80"> <!-- Range 0-100 -->
           <span id="opacity-value">80%</span> <!-- Display as percentage -->
+          <div class="control-indicator opacity-indicator" id="opacity-indicator" style="opacity: 0.8;"></div>
         </div>
         <div class="control-group">
           <label for="color-picker">Pattern Color</label>
           <input type="color" id="color-picker" value="#E0E0E0">
-          <span></span> <!-- Empty span for alignment -->
+          <span id="color-value">#E0E0E0</span>
+          <div class="control-indicator" id="color-indicator" style="background-color: #E0E0E0;"></div>
         </div>
         <!-- Add more controls as needed -->
     </div>
@@ -400,8 +417,6 @@
     const patternsGrid = document.getElementById('patterns-grid');
     const selectedPatternName = document.getElementById('selected-pattern-name');
     const backButton = document.getElementById('back-button');
-    const densitySlider = document.getElementById('density-slider');
-    const densityValue = document.getElementById('density-value');
     const sizeSlider = document.getElementById('size-slider');
     const sizeValue = document.getElementById('size-value');
     const opacitySlider = document.getElementById('opacity-slider');
@@ -620,14 +635,24 @@
        // Request full SVG for customization
        console.log('Requesting preview for', patternType);
        parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType, width: 120, height: 120, options: {
-         density: parseInt(densitySlider.value,10), size: parseInt(sizeSlider.value,10), opacity: parseInt(opacitySlider.value,10)/100, color: colorPicker.value
+         size: parseInt(sizeSlider.value, 10),
+         density: parseInt(sizeSlider.value, 10),
+         opacity: parseInt(opacitySlider.value, 10) / 100,
+         color: colorPicker.value
        } } }, '*');
 
-       // Reset controls to defaults
-       densitySlider.value = 50; densityValue.textContent = '50';
-       sizeSlider.value = 50; sizeValue.textContent = '50';
-       opacitySlider.value = 80; opacityValue.textContent = '80%';
+       // Reset controls to defaults with visual indicators
+       sizeSlider.value = 50; 
+       sizeValue.textContent = '50%';
+       document.getElementById('size-indicator').style.transform = 'scale(0.5)';
+       
+       opacitySlider.value = 80; 
+       opacityValue.textContent = '80%';
+       document.getElementById('opacity-indicator').style.opacity = 0.8;
+       
        colorPicker.value = '#E0E0E0';
+       document.getElementById('color-value').textContent = '#E0E0E0';
+       document.getElementById('color-indicator').style.backgroundColor = '#E0E0E0';
 
        // Set preview update function for initial preview and setup
        updateLivePreview();
@@ -640,20 +665,35 @@
     // Function to update live preview based on current slider values
     function updateLivePreview() {
       if (!currentPatternType) return;
+      
       console.log('Updating live preview for', currentPatternType);
+      
+      // Update visual indicators
+      const colorValue = colorPicker.value;
+      const opacityValue = parseInt(opacitySlider.value, 10) / 100;
+      const sizeValue = parseInt(sizeSlider.value, 10);
+      
+      // Update color indicator and text
+      document.getElementById('color-indicator').style.backgroundColor = colorValue;
+      document.getElementById('color-value').textContent = colorValue;
+      
+      // Update opacity indicator
+      document.getElementById('opacity-indicator').style.opacity = opacityValue;
+      
+      // Update size indicator
+      document.getElementById('size-indicator').style.transform = `scale(${sizeValue/100 * 0.8 + 0.2})`;
+      
       // Send request for full SVG preview
       parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType: currentPatternType, width: 120, height: 120, options: {
-        density: parseInt(densitySlider.value,10), size: parseInt(sizeSlider.value,10), opacity: parseInt(opacitySlider.value,10)/100, color: colorPicker.value
+        size: sizeValue, 
+        density: sizeValue, // Use same value for both size and density
+        opacity: opacityValue, 
+        color: colorValue
       } } }, '*');
     }
     
-    densitySlider.addEventListener('input', (e) => {
-      densityValue.textContent = e.target.value;
-      updateLivePreview();
-    });
-
     sizeSlider.addEventListener('input', (e) => {
-      sizeValue.textContent = e.target.value;
+      sizeValue.textContent = `${e.target.value}%`;
       updateLivePreview();
     });
     
@@ -663,7 +703,7 @@
     });
     
     // Add listener for color picker
-    colorPicker.addEventListener('input', () => {
+    colorPicker.addEventListener('input', (e) => {
       updateLivePreview();
     });
     
@@ -675,7 +715,7 @@
        parent.postMessage({ pluginMessage: {
          type: 'apply-pattern',
          patternType: patternType,
-         density: parseInt(densitySlider.value, 10),
+         density: parseInt(sizeSlider.value, 10),
          size: parseInt(sizeSlider.value, 10),
          opacity: parseInt(opacitySlider.value, 10) / 100, // Convert percentage to 0-1
          color: colorPicker.value
