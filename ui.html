@@ -180,7 +180,7 @@
 
     .control-group {
       display: grid;
-      grid-template-columns: auto 1fr auto; /* Label | Slider | Value */
+      grid-template-columns: 90px 1fr 40px; /* Fixed width for label and value */
       align-items: center;
       gap: 10px;
     }
@@ -188,18 +188,19 @@
     .control-group label {
       font-size: 13px;
       font-weight: 500;
-       white-space: nowrap;
+      white-space: nowrap;
+      text-align: left;
     }
 
     input[type="range"] {
       width: 100%;
       cursor: pointer;
       accent-color: var(--figma-color-bg-brand);
-       height: 5px;
-       background: var(--figma-color-border);
-       border-radius: 5px;
-       appearance: none; /* Override default look */
-       outline: none;
+      height: 5px;
+      background: var(--figma-color-border);
+      border-radius: 5px;
+      appearance: none; /* Override default look */
+      outline: none;
     }
      /* Style the thumb */
      input[type="range"]::-webkit-slider-thumb {
@@ -449,13 +450,14 @@
       { type: 'BeanShapes', name: 'Bean Shapes' },
       { type: 'CornerDots', name: 'Corner Dots' },
       { type: 'TriangleStack', name: 'Triangle Stack' },
-      { type: 'HalfDiamonds', name: 'Half Diamonds' },
       { type: 'RoundedSquares', name: 'Rounded Squares' },
       { type: 'PetalShapes', name: 'Petal Shapes' },
       { type: 'AngledChevrons', name: 'Angled Chevrons' },
       { type: 'EllipseLines', name: 'Ellipse Lines' },
       { type: 'DashedCircles', name: 'Dashed Circles' },
       { type: 'TornPaperEdge', name: 'Torn Paper Edge' },
+      { type: 'SwirlVortex', name: 'Swirl Vortex' },
+      { type: 'StreamLines', name: 'Stream Lines' },
       { type: 'SpiralLoops', name: 'Spiral Loops' },
       { type: 'ArrowRepeat', name: 'Arrow Repeat' },
       { type: 'CornerCutShapes', name: 'Corner Cut Shapes' },
@@ -892,6 +894,444 @@
            pattern += `</g>`;
            break;
 
+         case 'TinyMoons':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x-2},${y-5} A 6,6 0 0 1 ${x-2},${y+5} A 3,5 0 0 0 ${x-2},${y-5}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'Arrowheads':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<polygon points="${x+5},${y} ${x-3},${y-5} ${x-3},${y+5}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'BlockDots':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<rect x="${x-3}" y="${y-3}" width="6" height="6" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'ThinBars':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<rect x="${x-5}" y="${y-1}" width="10" height="2" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'CirclesOnSticks':
+           pattern = `<g fill="${color}" stroke="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+10}" stroke-width="1.5" />`;
+             pattern += `<circle cx="${x}" cy="${y-3}" r="3" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'NestedTriangles':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<polygon points="${x},${y-10} ${x+8},${y+5} ${x-8},${y+5}" />`;
+             pattern += `<polygon points="${x},${y-5} ${x+4},${y+3} ${x-4},${y+3}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'DotRingCombo':
+           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
+             pattern += `<circle cx="${x}" cy="${y}" r="6" fill="none" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'ArchRows':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) {
+             const y = (i+0.5)*height/2;
+             for(let j=0; j<3; j++) {
+               const x = j*width/3 + width/6;
+               pattern += `<path d="M${x-10},${y+5} A 10,10 0 0 1 ${x+10},${y+5}" />`;
+             }
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'CircleSlices':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x},${y} L${x+8},${y-8} A 10,10 0 0 1 ${x+8},${y+8} Z" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'DotsInCircle':
+           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<circle cx="${x}" cy="${y}" r="8" fill="none" />`;
+             // Add 3 dots inside circle
+             for(let k=0; k<3; k++) {
+               const angle = k * Math.PI * 2 / 3;
+               const dotX = x + Math.cos(angle) * 4;
+               const dotY = y + Math.sin(angle) * 4;
+               pattern += `<circle cx="${dotX}" cy="${dotY}" r="1.5" />`;
+             }
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'HalfCircles':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             const rotation = ((i+j) % 4) * 90;
+             pattern += `<path d="M${x-5},${y} A 5,5 0 0 1 ${x+5},${y}" transform="rotate(${rotation} ${x} ${y})" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'DiamondGrid':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<rect x="${x-5}" y="${y-5}" width="10" height="10" transform="rotate(45 ${x} ${y})" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'ThinRings':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<circle cx="${x}" cy="${y}" r="5" stroke-width="0.8" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'ZigzagLines':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) {
+             const y = i*height/3 + height/6;
+             pattern += `<polyline points="0,${y} ${width/4},${y-5} ${width/2},${y+5} ${width*3/4},${y-5} ${width},${y}" />`;
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'NestedSquares':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<rect x="${x-8}" y="${y-8}" width="16" height="16" />`;
+             pattern += `<rect x="${x-4}" y="${y-4}" width="8" height="8" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'CornerBrackets':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             // Draw 4 brackets
+             pattern += `<path d="M${x-5},${y-3} L${x-5},${y-5} L${x-3},${y-5}" />`;
+             pattern += `<path d="M${x+3},${y-5} L${x+5},${y-5} L${x+5},${y-3}" />`;
+             pattern += `<path d="M${x+5},${y+3} L${x+5},${y+5} L${x+3},${y+5}" />`;
+             pattern += `<path d="M${x-3},${y+5} L${x-5},${y+5} L${x-5},${y+3}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'TinyHearts':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x},${y+3} L${x-4},${y-2} A 3,3 0 0 1 ${x},${y-4} A 3,3 0 0 1 ${x+4},${y-2} Z" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'DotDashCombo':
+           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) {
+             const y = i*height/3 + height/6;
+             for(let j=0; j<4; j++) {
+               const x = j*width/4 + width/8;
+               if(j % 2 === 0) {
+                 pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
+               } else {
+                 pattern += `<line x1="${x-5}" y1="${y}" x2="${x+5}" y2="${y}" />`;
+               }
+             }
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'TinyRectangles':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<4; i++) { for(let j=0; j<3; j++) {
+             const x = (i+0.5)*width/4; 
+             const y = (j+0.5)*height/3;
+             pattern += `<rect x="${x-3}" y="${y-2}" width="6" height="4" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'OffsetGrid':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<4; i++) { 
+             const offset = (i % 2) * width/8;
+             const y = i*height/4 + height/8;
+             for(let j=0; j<3; j++) {
+               const x = j*width/3 + width/6 + offset;
+               pattern += `<circle cx="${x}" cy="${y}" r="4" />`;
+             }
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'BeanShapes':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             const rotation = ((i+j) % 4) * 90;
+             pattern += `<path d="M${x},${y-5} C${x+5},${y-5} ${x+5},${y+5} ${x},${y+5} C${x-5},${y+5} ${x-5},${y-5} ${x},${y-5} Z" transform="rotate(${rotation} ${x} ${y})" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'CornerDots':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           // Dots at corners of squares
+           for(let i=0; i<4; i++) {
+             for(let j=0; j<3; j++) {
+               const x = i*width/3;
+               const y = j*height/2;
+               pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
+             }
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'TriangleStack':
+           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<polygon points="${x},${y-8} ${x+6},${y+4} ${x-6},${y+4}" fill-opacity="0.3" />`;
+             pattern += `<polygon points="${x},${y-4} ${x+4},${y+3} ${x-4},${y+3}" fill-opacity="0.6" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'RoundedSquares':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<rect x="${x-6}" y="${y-6}" width="12" height="12" rx="3" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'PetalShapes':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             for(let k=0; k<4; k++) {
+               const angle = k * Math.PI / 2;
+               const px = x + Math.cos(angle) * 5;
+               const py = y + Math.sin(angle) * 5;
+               pattern += `<circle cx="${px}" cy="${py}" r="4" />`;
+             }
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'AngledChevrons':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             const rotation = (i+j) % 2 === 0 ? 30 : -30;
+             pattern += `<polyline points="${x-6},${y-3} ${x},${y+3} ${x+6},${y-3}" transform="rotate(${rotation} ${x} ${y})" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'EllipseLines':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             if((i+j) % 2 === 0) {
+               // Horizontal ellipse
+               pattern += `<ellipse cx="${x}" cy="${y}" rx="7" ry="3" />`;
+             } else {
+               // Vertical ellipse
+               pattern += `<ellipse cx="${x}" cy="${y}" rx="3" ry="7" />`;
+             }
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'DashedCircles':
+           pattern = `<g stroke="${color}" fill="none" stroke-dasharray="2,2" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<circle cx="${x}" cy="${y}" r="10" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'TornPaperEdge':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=1; i<4; i++) {
+             const y = i * height/4;
+             let points = `M0,${y}`;
+             for(let x=0; x<width; x+=width/10) {
+               const jitter = (Math.random() - 0.5) * 4;
+               points += ` L${x},${y+jitter}`;
+             }
+             pattern += `<path d="${points}" />`;
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'SpiralLoops':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x},${y} Q${x+10},${y-10} ${x},${y-5} T${x-5},${y-2} T${x},${y}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'ArrowRepeat':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             const rotation = ((i+j) % 4) * 90;
+             pattern += `<polygon points="${x},${y-5} ${x+4},${y-1} ${x+1},${y-1} ${x+1},${y+3} ${x-1},${y+3} ${x-1},${y-1} ${x-4},${y-1}" transform="rotate(${rotation} ${x} ${y})" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'CornerCutShapes':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x-6},${y-3} L${x-6},${y-6} L${x-3},${y-6} L${x+3},${y-6} L${x+6},${y-6} L${x+6},${y-3} L${x+6},${y+3} L${x+6},${y+6} L${x+3},${y+6} L${x-3},${y+6} L${x-6},${y+6} L${x-6},${y+3} Z" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'StepPattern':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) {
+             const y = i*height/3 + height/6;
+             let points = `M0,${y}`;
+             for(let j=0; j<5; j++) {
+               const x = j*width/5;
+               const step = (j%2===0) ? 5 : -5;
+               points += ` L${x},${y} L${x},${y+step}`;
+             }
+             points += ` L${width},${y}`;
+             pattern += `<path d="${points}" />`;
+           }
+           pattern += `</g>`;
+           break;
+           
+         case 'RippleDots':
+           pattern = `<g fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             // Main dot
+             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
+             // Ripple circles
+             for(let r=5; r<=15; r+=5) {
+               pattern += `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${color}" stroke-width="0.8" stroke-opacity="${0.7 - r/25}" />`;
+             }
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'HexRing':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             const size = 8;
+             pattern += `<polygon points="${x},${y-size} ${x+size*0.866},${y-size*0.5} ${x+size*0.866},${y+size*0.5} ${x},${y+size} ${x-size*0.866},${y+size*0.5} ${x-size*0.866},${y-size*0.5}" />`;
+             pattern += `<circle cx="${x}" cy="${y}" r="3" fill="${color}" />`;
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'FlowerGrid':
+           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
+             const x = (i+0.5)*width/2; 
+             const y = (j+0.5)*height/2;
+             // Center dot
+             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
+             // Petals
+             for(let k=0; k<6; k++) {
+               const angle = k * Math.PI / 3;
+               const px = x + Math.cos(angle) * 6;
+               const py = y + Math.sin(angle) * 6;
+               pattern += `<circle cx="${px}" cy="${py}" r="3" opacity="0.6" />`;
+             }
+           }}
+           pattern += `</g>`;
+           break;
+           
+         case 'TwistRibbons':
+           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           for(let i=0; i<3; i++) {
+             const y = i*height/3 + height/6;
+             pattern += `<path d="M0,${y} C${width*0.2},${y-8} ${width*0.4},${y+8} ${width*0.6},${y-8} S${width*0.8},${y+8} ${width},${y}" />`;
+           }
+           pattern += `</g>`;
+           break;
+           
          // ... existing code for default case ...
           default:
             // Fallback simple preview
@@ -980,12 +1420,23 @@
       const opacity = parseInt(opacitySlider.value, 10) / 100;
       const color = colorPicker.value;
       
+      // Calculate derived values for preview
+      const scaledSize = size / 50; // Convert slider (1-100) to scale factor (0.02-2)
+      const scaledDensity = 100 / (density || 1); // Inverse relationship - higher density = smaller spacing
+      
       // Update preview with custom options
       selectedPatternPreviewImg.src = generatePreviewSVG(
         currentPatternType, 
         80, 
         80, 
-        { density, size, opacity, color }
+        { 
+          density: density,
+          size: size,
+          opacity: opacity,
+          color: color,
+          scaleFactor: scaledSize,
+          spacingFactor: scaledDensity
+        }
       );
     }
     
