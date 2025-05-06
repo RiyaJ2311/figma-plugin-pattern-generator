@@ -773,7 +773,7 @@
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
              const x = (i+0.5)*width/3; 
              const y = (j+0.5)*height/2;
-             pattern += `<path d="M${x},${y-8} L${x+8},${y} L${x},${y+8} L${x},${y-8}" fill="${color}" fill-opacity="0.3" />`;
+             pattern += `<path d="M${x-5},${y} L${x},${y-8} L${x+5},${y} L${x},${y+8} Z" fill="${color}" fill-opacity="0.5" />`;
            }}
            pattern += `</g>`;
            break;

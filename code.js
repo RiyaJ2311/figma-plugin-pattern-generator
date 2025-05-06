@@ -6,7 +6,13 @@ figma.showUI(__html__, { width: 320, height: 480 });
 // When a message is received from the UI
 figma.ui.onmessage = async (msg) => {
   if (msg.type === 'apply-pattern') {
-    const { patternType } = msg;
+    const { 
+      patternType,
+      density = 50, // Default density if not provided
+      size = 50,    // Default size
+      opacity = 0.8,  // Default opacity
+      color = '#E0E0E0' // Default color
+    } = msg;
     
     // Get current selection
     const selection = figma.currentPage.selection;
@@ -23,8 +29,8 @@ figma.ui.onmessage = async (msg) => {
     figma.notify(`Applying ${patternType} pattern...`);
     
     try {
-      // Generate SVG pattern
-      const svgString = generateSVG(patternType, selectedFrame.width, selectedFrame.height);
+      // Generate SVG pattern with options
+      const svgString = generateSVG(patternType, selectedFrame.width, selectedFrame.height, { density, size, color, opacity });
       console.log(`Generated ${patternType} SVG with size ${selectedFrame.width}x${selectedFrame.height}`);
       
       try {
@@ -75,8 +81,8 @@ figma.ui.onmessage = async (msg) => {
         console.error('Error creating pattern:', error);
         figma.notify(`Error creating pattern: ${error.message}`);
         
-        // Fallback to simple pattern
-        createFallbackPattern(patternType, selectedFrame);
+        // Fallback to simple pattern with options
+        createFallbackPattern(patternType, selectedFrame, { density, size, color, opacity });
       }
     } catch (error) {
       console.error('Error applying pattern:', error);
@@ -87,17 +93,53 @@ figma.ui.onmessage = async (msg) => {
   }
 };
 
+// Helper function to map a value from one range to another
+function mapRange(value, inMin, inMax, outMin, outMax) {
+  // Ensure value is within input range
+  const clampedValue = Math.max(inMin, Math.min(value, inMax));
+  // Perform linear mapping
+  return ((clampedValue - inMin) * (outMax - outMin)) / (inMax - inMin) + outMin;
+}
+
 // Function to create a simple fallback pattern if SVG fails
-function createFallbackPattern(patternType, frame) {
+function createFallbackPattern(patternType, frame, options = {}) {
+  // Define default options (merge with provided options)
+  const defaultOptions = { density: 50, size: 50, color: '#E0E0E0', opacity: 0.8 };
+  // Use Object.assign for broader compatibility
+  const mergedOptions = Object.assign({}, defaultOptions, options);
+  
+  // Helper function to convert hex to Figma RGB
+  function hexToRgb(hex) {
+    let result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+    return result ? {
+      r: parseInt(result[1], 16) / 255,
+      g: parseInt(result[2], 16) / 255,
+      b: parseInt(result[3], 16) / 255
+    } : { r: 0.8, g: 0.8, b: 0.8 }; // Default to gray if hex is invalid
+  }
+
+  const patternColor = hexToRgb(mergedOptions.color);
+  const patternOpacity = mergedOptions.opacity;
+
   try {
     console.log('Creating fallback pattern for', patternType);
     let elements = [];
     
     switch (patternType) {
       case 'Grid': {
-        // Create simple grid lines
-        const gridSize = 40;
-        const strokeColor = { r: 0.85, g: 0.85, b: 0.85 }; // Light gray (#DADADA)
+        // --- Grid Fallback with Options ---
+        // Map density (1-100) to spacing (e.g., 100 down to 5)
+        const minSpacing = 5;
+        const maxSpacing = 100;
+        // Ensure gridSize is at least 1
+        const gridSize = Math.max(1, mapRange(mergedOptions.density, 1, 100, maxSpacing, minSpacing));
+
+        const minStroke = 0.1; // Ensure stroke is non-zero
+        const maxStroke = 5; // Slightly reduced max
+        // Ensure stroke is at least minStroke
+        const gridStrokeWeight = Math.max(minStroke, mapRange(mergedOptions.size, 1, 100, minStroke, maxStroke));
+
+        const gridStroke = [{ type: 'SOLID', color: patternColor, opacity: patternOpacity }];
         
         // Create horizontal lines
         for (let y = gridSize; y < frame.height; y += gridSize) {
@@ -105,7 +147,8 @@ function createFallbackPattern(patternType, frame) {
           line.resize(frame.width, 0);
           line.x = 0;
           line.y = y;
-          line.strokes = [{ type: 'SOLID', color: strokeColor }];
+          line.strokes = gridStroke;
+          line.strokeWeight = gridStrokeWeight;
           frame.appendChild(line);
           line.name = 'Grid Line Horizontal';
           elements.push(line);
@@ -117,7 +160,8 @@ function createFallbackPattern(patternType, frame) {
           line.resize(0, frame.height);
           line.x = x;
           line.y = 0;
-          line.strokes = [{ type: 'SOLID', color: strokeColor }];
+          line.strokes = gridStroke;
+          line.strokeWeight = gridStrokeWeight;
           frame.appendChild(line);
           line.name = 'Grid Line Vertical';
           elements.push(line);
@@ -126,18 +170,29 @@ function createFallbackPattern(patternType, frame) {
       }
       
       case 'Dots': {
-        // Create simple dots
-        const dotSpacing = 20;
-        const dotColor = { r: 0.88, g: 0.88, b: 0.88 }; // #E0E0E0
+        // --- Dots Fallback with Options ---
+        // Map density (1-100) to spacing (e.g., 80 down to 5)
+        const minSpacing = 5;
+        const maxSpacing = 80;
+        // Ensure spacing is at least 1
+        const dotSpacing = Math.max(1, mapRange(mergedOptions.density, 1, 100, maxSpacing, minSpacing));
+
+        // Map size (1-100) to radius (e.g., 0.5 up to 20)
+        const minRadius = 0.2; // Ensure radius is non-zero
+        const maxRadius = 15; // Reduced max radius
+        // Ensure radius is at least minRadius
+        const dotRadius = Math.max(minRadius, mapRange(mergedOptions.size, 1, 100, minRadius, maxRadius));
+        
+        const dotFill = [{ type: 'SOLID', color: patternColor, opacity: patternOpacity }];
         
         // Create a dot component to reuse
         for (let x = dotSpacing; x < frame.width; x += dotSpacing) {
           for (let y = dotSpacing; y < frame.height; y += dotSpacing) {
             const dot = figma.createEllipse();
-            dot.resize(4, 4);
-            dot.x = x - 2;
-            dot.y = y - 2;
-            dot.fills = [{ type: 'SOLID', color: dotColor }];
+            dot.resize(dotRadius * 2, dotRadius * 2); // Use diameter
+            dot.x = x - dotRadius;
+            dot.y = y - dotRadius;
+            dot.fills = dotFill;
             frame.appendChild(dot);
             dot.name = 'Dot';
             elements.push(dot);
@@ -199,41 +254,41 @@ function createFallbackPattern(patternType, frame) {
         break;
       
       case 'Lines': {
-        // Create diagonal lines (simplified)
-        const lineColor1 = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-        const lineColor2 = { r: 0.91, g: 0.91, b: 0.91 }; // #E8E8E8
-        
-        // Create diagonal stripes
-        const stripe1 = figma.createRectangle();
-        stripe1.resize(frame.width * 2, 2);
-        stripe1.x = -frame.width/2;
-        stripe1.y = frame.height/2;
-        stripe1.rotation = 45;
-        stripe1.fills = [{ type: 'SOLID', color: lineColor1 }];
-        
-        const stripe2 = figma.createRectangle();
-        stripe2.resize(frame.width * 2, 2);
-        stripe2.x = -frame.width/2;
-        stripe2.y = frame.height/4;
-        stripe2.rotation = 45;
-        stripe2.fills = [{ type: 'SOLID', color: lineColor2 }];
-        
-        const stripe3 = figma.createRectangle();
-        stripe3.resize(frame.width * 2, 2);
-        stripe3.x = -frame.width/2;
-        stripe3.y = frame.height*3/4;
-        stripe3.rotation = 45;
-        stripe3.fills = [{ type: 'SOLID', color: lineColor2 }];
-        
-        frame.appendChild(stripe1);
-        frame.appendChild(stripe2);
-        frame.appendChild(stripe3);
-        
-        stripe1.name = 'Diagonal Line 1';
-        stripe2.name = 'Diagonal Line 2';
-        stripe3.name = 'Diagonal Line 3';
-        
-        elements.push(stripe1, stripe2, stripe3);
+        // --- Lines Fallback with Options (Simplified Diagonal) ---
+        // Note: Fallback uses rectangles for diagonal lines, harder to control density precisely.
+        // We'll adjust stroke weight based on size and use a fixed number of lines.
+
+        // Map size (1-100) to stroke weight (e.g., 0.5 up to 8)
+        const minStroke = 0.1; // Ensure stroke is non-zero
+        const maxStroke = 10; // Increased max slightly
+        // Ensure stroke is at least minStroke
+        const lineStrokeWeight = Math.max(minStroke, mapRange(mergedOptions.size, 1, 100, minStroke, maxStroke));
+
+        const lineFill = [{ type: 'SOLID', color: patternColor, opacity: patternOpacity }];
+        // Density affects the *number* of lines in fallback (more direct control)
+        const minLines = 2;
+        const maxLines = 20;
+        const numLines = Math.round(mapRange(mergedOptions.density, 1, 100, minLines, maxLines)); 
+        const angle = 45;
+
+        for(let i = 0; i < numLines; i++) {
+          const line = figma.createRectangle();
+          const length = Math.sqrt(frame.width**2 + frame.height**2) * 1.5; // Cover corners better
+          line.resize(length, lineStrokeWeight); 
+          // Distribute lines across the diagonal more evenly
+          const offsetDist = (Math.max(frame.width, frame.height) / 2) * 1.4; // Approx diagonal half-length
+          const offset = mapRange(i, 0, numLines - 1, -offsetDist, offsetDist);
+          
+          // Position center based on offset perpendicular to angle
+          line.x = frame.width / 2 + offset * Math.cos(angle * Math.PI / 180 + Math.PI/2) - length / 2;
+          line.y = frame.height / 2 + offset * Math.sin(angle * Math.PI / 180 + Math.PI/2) - lineStrokeWeight / 2;
+
+          line.rotation = angle;
+          line.fills = lineFill;
+          frame.appendChild(line);
+          line.name = `Diagonal Line ${i+1}`;
+          elements.push(line);
+        }
         break;
       }
       
@@ -493,7 +548,7 @@ function createFallbackPattern(patternType, frame) {
         `;
         break;
       }
-      
+        
       case 'ThinXMarks':
         // Thin X marks pattern
         const xMarks = [];
@@ -1388,40 +1443,14 @@ function createFallbackPattern(patternType, frame) {
         break;
       
       case 'HalfDiamonds':
-        // Half diamonds pattern
-        const halfDiamonds = [];
-        const hdSpacing = 30;
-        const hdSize = 12;
-        
-        for (let row = 0; row < Math.ceil(frame.height / hdSpacing); row++) {
-          for (let col = 0; col < Math.ceil(frame.width / hdSpacing); col++) {
-            const x = col * hdSpacing + hdSpacing/2;
-            const y = row * hdSpacing + hdSpacing/2;
-            
-            // Alternate between top and bottom halves
-            const variant = (row + col) % 2;
-            
-            if (variant === 0) {
-              // Top half
-              halfDiamonds.push(`
-                <path d="M ${x} ${y-hdSize/2} L ${x+hdSize/2} ${y} L ${x} ${y+hdSize/2} L ${x-hdSize/2} ${y} Z" 
-                      fill="#E0E0E0" clip-path="polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%)"/>
-              `);
-            } else {
-              // Bottom half
-              halfDiamonds.push(`
-                <path d="M ${x} ${y-hdSize/2} L ${x+hdSize/2} ${y} L ${x} ${y+hdSize/2} L ${x-hdSize/2} ${y} Z" 
-                      fill="#E0E0E0" clip-path="polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%)"/>
-              `);
-            }
-          }
-        }
-        
-        pattern = `
-          <g>
-            ${halfDiamonds.join('')}
-          </g>
-        `;
+        pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+        for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
+          const x = (i+0.5)*frame.width/3; 
+          const y = (j+0.5)*frame.height/2;
+          // Fixed diamond path with proper fill
+          pattern += `<path d="M${x-5},${y} L${x},${y-8} L${x+5},${y} L${x},${y+8} Z" fill="${color}" fill-opacity="0.5" />`;
+        }}
+        pattern += `</g>`;
         break;
       
       case 'RoundedSquares':
@@ -2682,7 +2711,15 @@ function createFallbackPattern(patternType, frame) {
 }
 
 // Helper function to generate SVG pattern string
-function generateSVG(patternType, width, height) {
+function generateSVG(patternType, width, height, options = {}) {
+  // Define default options (merge with provided options)
+  const defaultOptions = { density: 50, size: 50, color: '#E0E0E0', opacity: 0.8 };
+  // Use Object.assign for broader compatibility
+  const mergedOptions = Object.assign({}, defaultOptions, options);
+
+  const patternColor = mergedOptions.color; // Hex color
+  const patternOpacity = mergedOptions.opacity;
+
   // Define an SVG with a white background
   const svgStart = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
   const svgEnd = '</svg>';
@@ -2692,32 +2729,60 @@ function generateSVG(patternType, width, height) {
   
   switch (patternType) {
     case 'Grid': { // <-- Added opening brace
-      // Simple grid pattern with direct lines (no pattern element)
+      // --- Grid SVG with Options ---
+      // Map density (1-100) to spacing (e.g., 100 down to 5)
+      const minSpacing = 5;
+      const maxSpacing = 100;
+      // Ensure gridSize is at least 1
+      const gridSize = Math.max(1, mapRange(mergedOptions.density, 1, 100, maxSpacing, minSpacing));
+
+      const minStroke = 0.1; // Ensure stroke non-zero
+      const maxStroke = 5;   // Slightly reduced max
+       // Ensure stroke is at least minStroke
+      const gridStrokeWidth = Math.max(minStroke, mapRange(mergedOptions.size, 1, 100, minStroke, maxStroke));
+
       pattern = `
-        <g stroke="#DADADA" stroke-width="1">
-          ${Array.from({ length: Math.ceil(width/40) }, (_, i) => 
-            `<line x1="${(i+1)*40}" y1="0" x2="${(i+1)*40}" y2="${height}"/>`
-          ).join('')}
-          ${Array.from({ length: Math.ceil(height/40) }, (_, i) => 
-            `<line x1="0" y1="${(i+1)*40}" x2="${width}" y2="${(i+1)*40}"/>`
-          ).join('')}
+        <g stroke="${patternColor}" stroke-width="${gridStrokeWidth}" stroke-opacity="${patternOpacity}">
+          ${Array.from({ length: Math.ceil(width/gridSize) -1 }, (_, i) => 
+            `<line x1="${(i+1)*gridSize}" y1="0" x2="${(i+1)*gridSize}" y2="${height}"/>`
+          ).join('\n')}
+          ${Array.from({ length: Math.ceil(height/gridSize) -1 }, (_, i) => 
+            `<line x1="0" y1="${(i+1)*gridSize}" x2="${width}" y2="${(i+1)*gridSize}"/>`
+          ).join('\n')}
         </g>
       `;
       break;
     } // <-- Added closing brace
       
     case 'Dots': { // <-- Added opening brace
-      // Direct dots rather than using a pattern
+      // --- Dots SVG with Options ---
+      // Map density (1-100) to spacing (e.g., 80 down to 5)
+      const minSpacing = 5;
+      const maxSpacing = 80;
+      // Ensure spacing is at least 1
+      const dotSpacing = Math.max(1, mapRange(mergedOptions.density, 1, 100, maxSpacing, minSpacing));
+
+      const minRadius = 0.2; // Ensure radius non-zero
+      const maxRadius = 15;  // Reduced max radius
+      // Ensure radius is at least minRadius
+      const dotRadius = Math.max(minRadius, mapRange(mergedOptions.size, 1, 100, minRadius, maxRadius));
+
       pattern = `
-        <g fill="#E0E0E0">
+        <g fill="${patternColor}" fill-opacity="${patternOpacity}">
           ${Array.from(
-            { length: Math.ceil(width/20) * Math.ceil(height/20) }, 
+            { length: Math.ceil(width/dotSpacing) * Math.ceil(height/dotSpacing) }, 
             (_, i) => {
-              const x = (i % Math.ceil(width/20)) * 20 + 10;
-              const y = Math.floor(i / Math.ceil(width/20)) * 20 + 10;
-              return `<circle cx="${x}" cy="${y}" r="2"/>`;
+              const col = i % Math.ceil(width/dotSpacing);
+              const row = Math.floor(i / Math.ceil(width/dotSpacing));
+              const x = col * dotSpacing + dotSpacing / 2; // Center dots in spacing
+              const y = row * dotSpacing + dotSpacing / 2;
+              // Only draw if center is within bounds (approx)
+              if (x < width && y < height) { 
+                 return `<circle cx="${x}" cy="${y}" r="${dotRadius}"/>`;
+              }
+              return '';
             }
-          ).join('')}
+          ).join('\n')}
         </g>
       `;
       break;
@@ -2763,44 +2828,47 @@ function generateSVG(patternType, width, height) {
       `;
       break;
     } // <-- Added closing brace
-    case 'Lines':
-      // Create diagonal lines (simplified)
-      const lineColor1 = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
-      const lineColor2 = { r: 0.91, g: 0.91, b: 0.91 }; // #E8E8E8
-      
-      // Create diagonal stripes
-      const stripe1 = figma.createRectangle();
-      stripe1.resize(width * 2, 2);
-      stripe1.x = -width/2;
-      stripe1.y = height/2;
-      stripe1.rotation = 45;
-      stripe1.fills = [{ type: 'SOLID', color: lineColor1 }];
-      
-      const stripe2 = figma.createRectangle();
-      stripe2.resize(width * 2, 2);
-      stripe2.x = -width/2;
-      stripe2.y = height/4;
-      stripe2.rotation = 45;
-      stripe2.fills = [{ type: 'SOLID', color: lineColor2 }];
-      
-      const stripe3 = figma.createRectangle();
-      stripe3.resize(width * 2, 2);
-      stripe3.x = -width/2;
-      stripe3.y = height*3/4;
-      stripe3.rotation = 45;
-      stripe3.fills = [{ type: 'SOLID', color: lineColor2 }];
-      
-      frame.appendChild(stripe1);
-      frame.appendChild(stripe2);
-      frame.appendChild(stripe3);
-      
-      stripe1.name = 'Diagonal Line 1';
-      stripe2.name = 'Diagonal Line 2';
-      stripe3.name = 'Diagonal Line 3';
-      
-      elements.push(stripe1, stripe2, stripe3);
+    case 'Lines': {
+       // --- Lines SVG with Options ---
+       // Map density (1-100) to spacing (e.g., 50 down to 2)
+       const minSpacing = 2;
+       const maxSpacing = 50;
+       // Ensure spacing is at least 1
+       const lineSpacing = Math.max(1, mapRange(mergedOptions.density, 1, 100, maxSpacing, minSpacing));
+
+       const minStroke = 0.1; // Ensure stroke non-zero
+       const maxStroke = 10;  // Increased max slightly
+       // Ensure stroke is at least minStroke
+       const lineStrokeWidth = Math.max(minStroke, mapRange(mergedOptions.size, 1, 100, minStroke, maxStroke));
+
+       const angle = 45; // Keep angle fixed for now
+       const radAngle = angle * Math.PI / 180;
+       const lineLength = Math.sqrt(width*width + height*height) * 1.5; // Ensure lines cover the area
+       const lines = [];
+       const step = lineSpacing / Math.sin(radAngle); // Calculate spacing along axis perpendicular to lines
+
+       // Calculate start/end points based on spacing along the perpendicular axis
+       for (let i = -Math.ceil(lineLength / step / 2); i < Math.ceil(lineLength / step / 2); i++) {
+          const offset = i * step;
+          // Center the lines roughly
+          const centerX = width / 2 + offset * Math.cos(radAngle + Math.PI/2);
+          const centerY = height / 2 + offset * Math.sin(radAngle + Math.PI/2);
+
+          const x1 = centerX - (lineLength / 2) * Math.cos(radAngle);
+          const y1 = centerY - (lineLength / 2) * Math.sin(radAngle);
+          const x2 = centerX + (lineLength / 2) * Math.cos(radAngle);
+          const y2 = centerY + (lineLength / 2) * Math.sin(radAngle);
+
+          lines.push(`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`);
+       }
+
+      pattern = `
+         <g stroke="${patternColor}" stroke-width="${lineStrokeWidth}" stroke-opacity="${patternOpacity}">
+           ${lines.join('\n')}
+        </g>
+      `;
       break;
-      
+    }
     case 'AbstractWaves': { // <-- Added opening brace
       // Create abstract wave patterns
       const waveColor1 = { r: 0.85, g: 0.85, b: 0.85 }; // #D8D8D8
@@ -4565,108 +4633,108 @@ function generateSVG(patternType, width, height) {
       `;
       break;
 
-      case 'TriangleSpirals':
-        // Triangle Spirals pattern
-        const triangleSpirals = [];
-        const tsSpiralCount = Math.ceil(width / 250); // Adjust count based on width
-        const trianglesPerSpiral = 25; // Increased count
-        const tsMaxRadius = Math.min(width, height) / (tsSpiralCount * 1.5); // Adjust radius
-        
-        for (let spiral = 0; spiral < tsSpiralCount; spiral++) {
-          const centerX = width * (spiral + 0.5) / tsSpiralCount;
-          const centerY = height / 2; // Center vertically
-          for (let i = 0; i < trianglesPerSpiral; i++) {
-            const angle = i * 0.7; // Adjusted angle step
-            const radius = (i / trianglesPerSpiral) * tsMaxRadius;
-            const triX = centerX + Math.cos(angle) * radius;
-            const triY = centerY + Math.sin(angle) * radius;
-            const triSize = 4 + i * 0.4; // Increased size
-            triangleSpirals.push(`<polygon points=\"${triX},${triY-triSize} ${triX-triSize*0.866},${triY+triSize*0.5} ${triX+triSize*0.866},${triY+triSize*0.5}\" transform=\"rotate(${angle*60} ${triX} ${triY})\" fill=\"#E0E0E0\"/>`);
-          }
+    case 'TriangleSpirals':
+      // Triangle Spirals pattern
+      const triangleSpirals = [];
+      const tsSpiralCount = Math.ceil(width / 250); // Adjust count based on width
+      const trianglesPerSpiral = 25; // Increased count
+      const tsMaxRadius = Math.min(width, height) / (tsSpiralCount * 1.5); // Adjust radius
+      
+      for (let spiral = 0; spiral < tsSpiralCount; spiral++) {
+        const centerX = width * (spiral + 0.5) / tsSpiralCount;
+        const centerY = height / 2; // Center vertically
+        for (let i = 0; i < trianglesPerSpiral; i++) {
+          const angle = i * 0.7; // Adjusted angle step
+          const radius = (i / trianglesPerSpiral) * tsMaxRadius;
+          const triX = centerX + Math.cos(angle) * radius;
+          const triY = centerY + Math.sin(angle) * radius;
+          const triSize = 4 + i * 0.4; // Increased size
+          triangleSpirals.push(`<polygon points=\"${triX},${triY-triSize} ${triX-triSize*0.866},${triY+triSize*0.5} ${triX+triSize*0.866},${triY+triSize*0.5}\" transform=\"rotate(${angle*60} ${triX} ${triY})\" fill=\"#E0E0E0\"/>`);
         }
-        pattern = `
-          <g>
-            ${triangleSpirals.join('\\n')}
-          </g>
-        `;
-        break;
+      }
+      pattern = `
+        <g>
+          ${triangleSpirals.join('\\n')}
+        </g>
+      `;
+      break;
 
-      case 'OffsetCubes':
-        // Offset Cubes pattern
-        const offsetCubes = [];
-        const ocSize = 15; // Increased size
-        const ocSpacingX = ocSize * 1.732;
-        const ocSpacingY = ocSize * 1.5;
-        for (let row = -1; row < Math.ceil(height / ocSpacingY) + 1; row++) {
-          for (let col = -1; col < Math.ceil(width / ocSpacingX) + 1; col++) {
-            const x = col * ocSpacingX + (row % 2) * (ocSpacingX / 2);
-            const y = row * ocSpacingY;
-            // Draw top, left, right faces
-            offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x},${y-ocSize} ${x-ocSpacingX/2},${y-ocSize/2} Z\" fill=\"#F0F0F0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Top
-            offsetCubes.push(`<polygon points=\"${x},${y} ${x-ocSpacingX/2},${y-ocSize/2} ${x-ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#E0E0E0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Left
-            offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x+ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#D0D0D0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Right
-          }
+    case 'OffsetCubes':
+      // Offset Cubes pattern
+      const offsetCubes = [];
+      const ocSize = 15; // Increased size
+      const ocSpacingX = ocSize * 1.732;
+      const ocSpacingY = ocSize * 1.5;
+      for (let row = -1; row < Math.ceil(height / ocSpacingY) + 1; row++) {
+        for (let col = -1; col < Math.ceil(width / ocSpacingX) + 1; col++) {
+          const x = col * ocSpacingX + (row % 2) * (ocSpacingX / 2);
+          const y = row * ocSpacingY;
+          // Draw top, left, right faces
+          offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x},${y-ocSize} ${x-ocSpacingX/2},${y-ocSize/2} Z\" fill=\"#F0F0F0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Top
+          offsetCubes.push(`<polygon points=\"${x},${y} ${x-ocSpacingX/2},${y-ocSize/2} ${x-ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#E0E0E0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Left
+          offsetCubes.push(`<polygon points=\"${x},${y} ${x+ocSpacingX/2},${y-ocSize/2} ${x+ocSpacingX/2},${y+ocSize/2} ${x},${y+ocSize} Z\" fill=\"#D0D0D0\" stroke=\"#D8D8D8\" stroke-width=\"0.5\"/>`); // Right
         }
-        pattern = `
-          <g>
-            ${offsetCubes.join('\\n')}
-          </g>
-        `;
-        break;
+      }
+      pattern = `
+        <g>
+          ${offsetCubes.join('\\n')}
+        </g>
+      `;
+      break;
 
-      case 'InterlockingRings':
-        // Interlocking Rings pattern
-        const interlockingRings = [];
-        const irSpacingX = 25; // Increased spacing
-        const irSpacingY = 18; // Increased spacing
-        const irRadius = 15; // Increased radius
-        for (let row = 0; row < Math.ceil(height / irSpacingY); row++) {
-          for (let col = 0; col < Math.ceil(width / irSpacingX); col++) {
-            const x = col * irSpacingX + (row % 2 ? irSpacingX / 2 : 0);
-            const y = row * irSpacingY;
-            interlockingRings.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${irRadius}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`); // Increased stroke-width
-          }
+    case 'InterlockingRings':
+      // Interlocking Rings pattern
+      const interlockingRings = [];
+      const irSpacingX = 25; // Increased spacing
+      const irSpacingY = 18; // Increased spacing
+      const irRadius = 15; // Increased radius
+      for (let row = 0; row < Math.ceil(height / irSpacingY); row++) {
+        for (let col = 0; col < Math.ceil(width / irSpacingX); col++) {
+          const x = col * irSpacingX + (row % 2 ? irSpacingX / 2 : 0);
+          const y = row * irSpacingY;
+          interlockingRings.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${irRadius}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`); // Increased stroke-width
         }
-        pattern = `
-          <g>
-            ${interlockingRings.join('\\n')}
-          </g>
-        `;
-        break;
+      }
+      pattern = `
+        <g>
+          ${interlockingRings.join('\\n')}
+        </g>
+      `;
+      break;
 
-      case '3DZigzags':
-        // 3D Zigzags pattern
-        const threeDZigzags = [];
-        const zzSpacing = 30; // Increased spacing
-        const zzHeight = 12; // Increased size
-        const zzDepth = 4; // Increased depth
-        for (let y = zzSpacing; y < height; y += zzSpacing * 1.5) {
-          let pathD = `M 0 ${y}`;
-          let shadowD = `M ${zzDepth} ${y + zzDepth}`;
-          for (let x = 0; x < width; x += zzHeight * 2) {
-            pathD += ` L ${x+zzHeight} ${y-zzHeight/2} L ${x+zzHeight*2} ${y}`;
-            shadowD += ` L ${x+zzHeight+zzDepth} ${y-zzHeight/2+zzDepth} L ${x+zzHeight*2+zzDepth} ${y+zzDepth}`;
-          }
-          threeDZigzags.push(`<path d=\"${shadowD}\" stroke=\"#C8C8C8\" stroke-width=\"1\" fill=\"none\"/>`);
-          threeDZigzags.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+    case '3DZigzags':
+      // 3D Zigzags pattern
+      const threeDZigzags = [];
+      const zzSpacing = 30; // Increased spacing
+      const zzHeight = 12; // Increased size
+      const zzDepth = 4; // Increased depth
+      for (let y = zzSpacing; y < height; y += zzSpacing * 1.5) {
+        let pathD = `M 0 ${y}`;
+        let shadowD = `M ${zzDepth} ${y + zzDepth}`;
+        for (let x = 0; x < width; x += zzHeight * 2) {
+          pathD += ` L ${x+zzHeight} ${y-zzHeight/2} L ${x+zzHeight*2} ${y}`;
+          shadowD += ` L ${x+zzHeight+zzDepth} ${y-zzHeight/2+zzDepth} L ${x+zzHeight*2+zzDepth} ${y+zzDepth}`;
         }
-        pattern = `
-          <g>
-            ${threeDZigzags.join('\\n')}
-          </g>
-        `;
-        break;
+        threeDZigzags.push(`<path d=\"${shadowD}\" stroke=\"#C8C8C8\" stroke-width=\"1\" fill=\"none\"/>`);
+        threeDZigzags.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+      }
+      pattern = `
+        <g>
+          ${threeDZigzags.join('\\n')}
+        </g>
+      `;
+      break;
 
-      case 'DoodleLoops':
-        // Doodle Loops pattern
-        const doodleLoops = [];
-        const doodleLoopsDlSpacing = 40; // Renamed from dlSpacing
-        for (let row = 0; row < Math.ceil(height / doodleLoopsDlSpacing); row++) {
-          for (let col = 0; col < Math.ceil(width / doodleLoopsDlSpacing); col++) {
-              const x = col * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
-              const y = row * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
-              const rotation = (x + y) * 2; // Simpler rotation
-              doodleLoops.push(`<path d=\"M ${x-12} ${y} C ${x-12} ${y-15}, ${x+12} ${y-15}, ${x+12} ${y} S ${x-12} ${y+15}, ${x-12} ${y}\" transform=\"rotate(${rotation} ${x} ${y})\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+    case 'DoodleLoops':
+      // Doodle Loops pattern
+      const doodleLoops = [];
+      const doodleLoopsDlSpacing = 40; // Renamed from dlSpacing
+      for (let row = 0; row < Math.ceil(height / doodleLoopsDlSpacing); row++) {
+        for (let col = 0; col < Math.ceil(width / doodleLoopsDlSpacing); col++) {
+            const x = col * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
+            const y = row * doodleLoopsDlSpacing + doodleLoopsDlSpacing/2;
+            const rotation = (x + y) * 2; // Simpler rotation
+            doodleLoops.push(`<path d=\"M ${x-12} ${y} C ${x-12} ${y-15}, ${x+12} ${y-15}, ${x+12} ${y} S ${x-12} ${y+15}, ${x-12} ${y}\" transform=\"rotate(${rotation} ${x} ${y})\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
           }
         }
         pattern = `
@@ -4676,95 +4744,95 @@ function generateSVG(patternType, width, height) {
         `;
         break;
 
-      case 'ThinSlashGrid':
-        // Thin Slash Grid pattern
-        const thinSlashGrid = [];
-        const tsgSpacing = 10; // Increased spacing
-        const tsgLineLength = Math.max(width, height) * 1.5; // Renamed from lineLength, ensure lines cover the area
-        for (let i = -Math.ceil(height / tsgSpacing) - Math.ceil(width / tsgSpacing); i < Math.ceil(width / tsgSpacing) + Math.ceil(height / tsgSpacing); i++) {
-          const startX = i * tsgSpacing;
-          // Forward slashes
-          thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX - tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
-          // Backward slashes
-          thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX + tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
-        }
-        pattern = `
-          <g>
-            ${thinSlashGrid.join('\\n')}
-          </g>
-        `;
-        break;
+    case 'ThinSlashGrid':
+      // Thin Slash Grid pattern
+      const thinSlashGrid = [];
+      const tsgSpacing = 10; // Increased spacing
+      const tsgLineLength = Math.max(width, height) * 1.5; // Renamed from lineLength, ensure lines cover the area
+      for (let i = -Math.ceil(height / tsgSpacing) - Math.ceil(width / tsgSpacing); i < Math.ceil(width / tsgSpacing) + Math.ceil(height / tsgSpacing); i++) {
+        const startX = i * tsgSpacing;
+        // Forward slashes
+        thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX - tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
+        // Backward slashes
+        thinSlashGrid.push(`<line x1=\"${startX}\" y1=\"0\" x2=\"${startX + tsgLineLength}\" y2=\"${tsgLineLength}\" stroke=\"#D8D8D8\" stroke-width=\"0.7\"/>`);
+      }
+      pattern = `
+        <g>
+          ${thinSlashGrid.join('\\n')}
+        </g>
+      `;
+      break;
 
-      case 'ParallelCurves':
-        // Parallel Curves pattern
-        const parallelCurves = [];
-        const pcSpacing = 20; // Increased spacing
-        const numCurves = Math.ceil(height / pcSpacing);
-        const pcAmplitude = 10; // Renamed from amplitude, Increased amplitude
-        const pcFrequency = 0.03; // Renamed from frequency, Adjusted frequency
+    case 'ParallelCurves':
+      // Parallel Curves pattern
+      const parallelCurves = [];
+      const pcSpacing = 20; // Increased spacing
+      const numCurves = Math.ceil(height / pcSpacing);
+      const pcAmplitude = 10; // Renamed from amplitude, Increased amplitude
+      const pcFrequency = 0.03; // Renamed from frequency, Adjusted frequency
 
-        for (let i = 0; i < numCurves; i++) {
-          const yOffset = i * pcSpacing + pcSpacing / 2;
-          let pathD = `M 0 ${yOffset}`;
-          for (let x = 0; x <= width; x += 10) {
-            const y = yOffset + Math.sin(x * pcFrequency + i * 0.5) * pcAmplitude;
-            pathD += ` L ${x} ${y}`;
-          }
-          parallelCurves.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`);
+      for (let i = 0; i < numCurves; i++) {
+        const yOffset = i * pcSpacing + pcSpacing / 2;
+        let pathD = `M 0 ${yOffset}`;
+        for (let x = 0; x <= width; x += 10) {
+          const y = yOffset + Math.sin(x * pcFrequency + i * 0.5) * pcAmplitude;
+          pathD += ` L ${x} ${y}`;
         }
-        pattern = `
-          <g>
-            ${parallelCurves.join('\\n')}
-          </g>
-        `;
-        break;
+        parallelCurves.push(`<path d=\"${pathD}\" stroke=\"#E0E0E0\" stroke-width=\"1.2\" fill=\"none\"/>`);
+      }
+      pattern = `
+        <g>
+          ${parallelCurves.join('\\n')}
+        </g>
+      `;
+      break;
 
       case 'StarDotCluster': { // <-- Added opening brace
-        // Star + Dot Cluster pattern
-        const starDotCluster = [];
-        const sdcSpacing = 50; // Increased spacing
-        const starSize = 8; // Increased star size
-        const dotRadius = 1.5; // Increased dot size
-        const dotClusterRadius = 12; // Increased cluster radius
+      // Star + Dot Cluster pattern
+      const starDotCluster = [];
+      const sdcSpacing = 50; // Increased spacing
+      const starSize = 8; // Increased star size
+      const dotRadius = 1.5; // Increased dot size
+      const dotClusterRadius = 12; // Increased cluster radius
 
-        for (let row = 0; row < Math.ceil(height / sdcSpacing); row++) {
-          for (let col = 0; col < Math.ceil(width / sdcSpacing); col++) {
-            const x = col * sdcSpacing + sdcSpacing/2;
-            const y = row * sdcSpacing + sdcSpacing/2;
-            // Star
-            starDotCluster.push(`<path d=\"M ${x} ${y-starSize} L ${x+starSize*0.3} ${y-starSize*0.3} L ${x+starSize} ${y} L ${x+starSize*0.3} ${y+starSize*0.3} L ${x} ${y+starSize} L ${x-starSize*0.3} ${y+starSize*0.3} L ${x-starSize} ${y} L ${x-starSize*0.3} ${y-starSize*0.3} Z\" fill=\"#E0E0E0\"/>`);
-            // Dots
-            for (let i = 0; i < 6; i++) { // Increased dot count
-              const angle = (i / 6) * Math.PI * 2 + (x+y)*0.01;
-              const dotX = x + Math.cos(angle) * dotClusterRadius;
-              const dotY = y + Math.sin(angle) * dotClusterRadius;
-              starDotCluster.push(`<circle cx=\"${dotX}\" cy=\"${dotY}\" r=\"${dotRadius}\" fill=\"#D8D8D8\"/>`);
-            }
+      for (let row = 0; row < Math.ceil(height / sdcSpacing); row++) {
+        for (let col = 0; col < Math.ceil(width / sdcSpacing); col++) {
+          const x = col * sdcSpacing + sdcSpacing/2;
+          const y = row * sdcSpacing + sdcSpacing/2;
+          // Star
+          starDotCluster.push(`<path d=\"M ${x} ${y-starSize} L ${x+starSize*0.3} ${y-starSize*0.3} L ${x+starSize} ${y} L ${x+starSize*0.3} ${y+starSize*0.3} L ${x} ${y+starSize} L ${x-starSize*0.3} ${y+starSize*0.3} L ${x-starSize} ${y} L ${x-starSize*0.3} ${y-starSize*0.3} Z\" fill=\"#E0E0E0\"/>`);
+          // Dots
+          for (let i = 0; i < 6; i++) { // Increased dot count
+            const angle = (i / 6) * Math.PI * 2 + (x+y)*0.01;
+            const dotX = x + Math.cos(angle) * dotClusterRadius;
+            const dotY = y + Math.sin(angle) * dotClusterRadius;
+            starDotCluster.push(`<circle cx=\"${dotX}\" cy=\"${dotY}\" r=\"${dotRadius}\" fill=\"#D8D8D8\"/>`);
           }
         }
-        pattern = `
-          <g>
-            ${starDotCluster.join('\\n')}
-          </g>
-        `;
-        break;
+      }
+      pattern = `
+        <g>
+          ${starDotCluster.join('\\n')}
+        </g>
+      `;
+      break;
       } // <-- Added closing brace
 
       case 'LineLeaf': { // <-- Added opening brace
-        // Line & Leaf pattern
-        const lineLeaf = [];
-        const llLineSpacing = 25; // Increased spacing
-        const leafSpacing = 50; // Increased spacing
-        const leafScale = 1.0; // Increased scale
+      // Line & Leaf pattern
+      const lineLeaf = [];
+      const llLineSpacing = 25; // Increased spacing
+      const leafSpacing = 50; // Increased spacing
+      const leafScale = 1.0; // Increased scale
 
         for (let y = llLineSpacing; y < frame.height; y += llLineSpacing) {
           lineLeaf.push(`<line x1=\"0\" y1=\"${y}\" x2=\"${frame.width}\" y2=\"${y}\" stroke=\"#E0E0E0\" stroke-width=\"1\"/>`);
-          // Add leaves
+        // Add leaves
           for (let x = leafSpacing; x < frame.width; x += leafSpacing) {
-            if ((Math.floor(x / leafSpacing) + Math.floor(y / llLineSpacing)) % 2 === 0) { // Alternate placement
-               const leafSize = 4 * leafScale;
-               const rotation = (x+y)*3;
-               lineLeaf.push(`<path d=\"M ${x} ${y-leafSize*0.25} c -${leafSize*0.75} -${leafSize*0.5} -${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25} c ${leafSize*0.75} 0 ${leafSize*0.75} ${leafSize*0.75} 0 ${leafSize*1.25} M ${x} ${y-leafSize*0.25} c ${leafSize*0.75} -${leafSize*0.5} ${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25}\" fill=\"#D8D8D8\" transform=\"rotate(${rotation} ${x} ${y}) scale(${leafScale})\"/>`);
+          if ((Math.floor(x / leafSpacing) + Math.floor(y / llLineSpacing)) % 2 === 0) { // Alternate placement
+             const leafSize = 4 * leafScale;
+             const rotation = (x+y)*3;
+             lineLeaf.push(`<path d=\"M ${x} ${y-leafSize*0.25} c -${leafSize*0.75} -${leafSize*0.5} -${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25} c ${leafSize*0.75} 0 ${leafSize*0.75} ${leafSize*0.75} 0 ${leafSize*1.25} M ${x} ${y-leafSize*0.25} c ${leafSize*0.75} -${leafSize*0.5} ${leafSize*0.75} -${leafSize*1.25} 0 -${leafSize*1.25}\" fill=\"#D8D8D8\" transform=\"rotate(${rotation} ${x} ${y}) scale(${leafScale})\"/>`);
               }
             }
           }
@@ -4777,69 +4845,69 @@ function generateSVG(patternType, width, height) {
        } // <-- Added closing brace
 
       case 'TearGrid': { // <-- Added opening brace
-        // Tear Grid pattern
-        const tearGrid = [];
-        const tgSpacing = 25; // Increased spacing
-        const tearSize = 6; // Increased size
+      // Tear Grid pattern
+      const tearGrid = [];
+      const tgSpacing = 25; // Increased spacing
+      const tearSize = 6; // Increased size
 
         for (let row = 0; row < Math.ceil(frame.height / tgSpacing); row++) {
           for (let col = 0; col < Math.ceil(frame.width / tgSpacing); col++) {
-            const x = col * tgSpacing + tgSpacing/2;
-            const y = row * tgSpacing + tgSpacing/2;
-            const rotation = ((row + col) % 4) * 90 + 15; // Add rotation
-            tearGrid.push(`<path d=\"M 0 ${-tearSize*1.5} C ${tearSize} ${-tearSize*1.5} ${tearSize} ${tearSize*0.5} 0 ${tearSize*0.5} C ${-tearSize} ${tearSize*0.5} ${-tearSize} ${-tearSize*1.5} 0 ${-tearSize*1.5} Z\" transform=\"translate(${x}, ${y}) rotate(${rotation}) scale(0.8)\" fill=\"#E0E0E0\"/>`);
-          }
+          const x = col * tgSpacing + tgSpacing/2;
+          const y = row * tgSpacing + tgSpacing/2;
+          const rotation = ((row + col) % 4) * 90 + 15; // Add rotation
+          tearGrid.push(`<path d=\"M 0 ${-tearSize*1.5} C ${tearSize} ${-tearSize*1.5} ${tearSize} ${tearSize*0.5} 0 ${tearSize*0.5} C ${-tearSize} ${tearSize*0.5} ${-tearSize} ${-tearSize*1.5} 0 ${-tearSize*1.5} Z\" transform=\"translate(${x}, ${y}) rotate(${rotation}) scale(0.8)\" fill=\"#E0E0E0\"/>`);
         }
-        pattern = `
-          <g>
-            ${tearGrid.join('\\n')}
-          </g>
-        `;
-        break;
+      }
+      pattern = `
+        <g>
+          ${tearGrid.join('\\n')}
+        </g>
+      `;
+      break;
       } // <-- Added closing brace
 
       case 'EyeSymbols': { // <-- Added opening brace
-        // Eye Symbols pattern
-        const eyeSymbols = [];
+      // Eye Symbols pattern
+      const eyeSymbols = [];
         const eyeCount = Math.ceil((frame.width * frame.height) / (60*60)); // Adjust count based on area
 
-        for (let i = 0; i < eyeCount; i++) {
-          // Use more structured placement instead of pure random for consistency
-          const gridDim = Math.ceil(Math.sqrt(eyeCount));
+      for (let i = 0; i < eyeCount; i++) {
+        // Use more structured placement instead of pure random for consistency
+        const gridDim = Math.ceil(Math.sqrt(eyeCount));
           const cellWidth = frame.width / gridDim;
           const cellHeight = frame.height / gridDim;
-          const gridX = (i % gridDim) * cellWidth;
-          const gridY = Math.floor(i / gridDim) * cellHeight;
-          
-          // Add some random offset within the cell
-          const x = gridX + cellWidth * (0.3 + Math.random() * 0.4);
-          const y = gridY + cellHeight * (0.3 + Math.random() * 0.4);
-          
-          const eyeRX = 10; // Increased size
-          const eyeRY = 5; // Increased size
-          const pupilR = 2.5; // Increased size
+        const gridX = (i % gridDim) * cellWidth;
+        const gridY = Math.floor(i / gridDim) * cellHeight;
+        
+        // Add some random offset within the cell
+        const x = gridX + cellWidth * (0.3 + Math.random() * 0.4);
+        const y = gridY + cellHeight * (0.3 + Math.random() * 0.4);
+        
+        const eyeRX = 10; // Increased size
+        const eyeRY = 5; // Increased size
+        const pupilR = 2.5; // Increased size
 
-          eyeSymbols.push(`<ellipse cx=\"${x}\" cy=\"${y}\" rx=\"${eyeRX}\" ry=\"${eyeRY}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
-          eyeSymbols.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${pupilR}\" fill=\"#E0E0E0\"/>`);
-        }
-        pattern = `
-          <g>
-            ${eyeSymbols.join('\\n')}
-          </g>
-        `;
-        break;
+        eyeSymbols.push(`<ellipse cx=\"${x}\" cy=\"${y}\" rx=\"${eyeRX}\" ry=\"${eyeRY}\" stroke=\"#E0E0E0\" stroke-width=\"1\" fill=\"none\"/>`);
+        eyeSymbols.push(`<circle cx=\"${x}\" cy=\"${y}\" r=\"${pupilR}\" fill=\"#E0E0E0\"/>`);
+      }
+      pattern = `
+        <g>
+          ${eyeSymbols.join('\\n')}
+        </g>
+      `;
+      break;
       } // <-- Added closing brace
 
       case 'PuzzleGrid': { // <-- Added opening brace
-        // Puzzle Grid pattern
-        const puzzleGrid = [];
+      // Puzzle Grid pattern
+      const puzzleGrid = [];
         const pzSize = 40; // Size of each puzzle piece
 
         for (let row = 0; row < Math.ceil(frame.height / pzSize); row++) {
           for (let col = 0; col < Math.ceil(frame.width / pzSize); col++) {
-            const x = col * pzSize;
-            const y = row * pzSize;
-            
+          const x = col * pzSize;
+          const y = row * pzSize;
+          
             // Define nub positions (0:none, 1:out, -1:in) pseudo-randomly based on pos
             const topNub = (row > 0) ? (((col + row*3) % 3) - 1) : 0;
             const rightNub = (col < Math.ceil(frame.width / pzSize) - 1) ? (((col*3 + row) % 3) - 1) : 0;
@@ -4850,11 +4918,11 @@ function generateSVG(patternType, width, height) {
             const nH = pzSize * 0.15; // Nub height based on piece size
             const c = 0.551915 * nH * 0.5; // Control point calculation factor for circular nub approx
 
-            let pathD = `M ${x} ${y}`;
+          let pathD = `M ${x} ${y}`;
 
             // Top Edge
             pathD += ` l ${pzSize*0.35} 0`;
-            if (topNub !== 0) {
+          if (topNub !== 0) {
               pathD += ` l 0 ${-topNub*nH*0.5}`; // Start of nub curve
               pathD += ` c ${nW*0.25} ${-topNub*nH*0.4} ${nW*0.75} ${-topNub*nH*0.4} ${nW} 0`; // Nub arc
               pathD += ` l 0 ${topNub*nH*0.5}`; // End of nub curve
@@ -4863,7 +4931,7 @@ function generateSVG(patternType, width, height) {
 
             // Right Edge
             pathD += ` l 0 ${pzSize*0.35}`;
-             if (rightNub !== 0) {
+           if (rightNub !== 0) {
               pathD += ` l ${rightNub*nH*0.5} 0`;
               pathD += ` c ${rightNub*nH*0.4} ${nW*0.25} ${rightNub*nH*0.4} ${nW*0.75} 0 ${nW}`;
               pathD += ` l ${-rightNub*nH*0.5} 0`;
@@ -4872,7 +4940,7 @@ function generateSVG(patternType, width, height) {
 
             // Bottom Edge
             pathD += ` l ${-pzSize*0.35} 0`;
-             if (bottomNub !== 0) {
+           if (bottomNub !== 0) {
               pathD += ` l 0 ${bottomNub*nH*0.5}`;
               pathD += ` c ${-nW*0.25} ${bottomNub*nH*0.4} ${-nW*0.75} ${bottomNub*nH*0.4} ${-nW} 0`;
               pathD += ` l 0 ${-bottomNub*nH*0.5}`;
@@ -4881,22 +4949,22 @@ function generateSVG(patternType, width, height) {
 
             // Left Edge
             pathD += ` l 0 ${-pzSize*0.35}`;
-            if (leftNub !== 0) {
+          if (leftNub !== 0) {
               pathD += ` l ${-leftNub*nH*0.5} 0`;
               pathD += ` c ${-leftNub*nH*0.4} ${-nW*0.25} ${-leftNub*nH*0.4} ${-nW*0.75} 0 ${-nW}`;
               pathD += ` l ${leftNub*nH*0.5} 0`;
             }
             pathD += ` Z`; // Close path (back to top-left)
 
-            puzzleGrid.push(`<path d="${pathD}" stroke="#E0E0E0" stroke-width="1" fill="#F0F0F0"/>`);
-          }
+          puzzleGrid.push(`<path d="${pathD}" stroke="#E0E0E0" stroke-width="1" fill="#F0F0F0"/>`);
         }
-        pattern = `
-          <g>
+      }
+      pattern = `
+        <g>
             ${puzzleGrid.join('')}
-          </g>
-        `;
-        break;
+        </g>
+      `;
+      break;
       } // <-- Added closing brace
 
       // ------------------- NEW PATTERNS START (Batch 2) -------------------
@@ -5199,11 +5267,11 @@ function generateSVG(patternType, width, height) {
         break;
       }
 
-      default: {
-        // Default to grid pattern
-        // ... existing code ...
-      }
+    default: {
+      // Default to grid pattern
+      // ... existing code ...
     }
-    
-    return svgStart + pattern + svgEnd;
   }
+  
+  return svgStart + pattern + svgEnd;
+}
