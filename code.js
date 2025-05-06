@@ -10,11 +10,127 @@ figma.ui.onmessage = async (msg) => {
     try {
       console.log('Preview request received for:', msg.patternType);
       const { patternType, width, height, options = {} } = msg;
-      // Generate full SVG string using existing logic
-      const svgString = generateSVG(patternType, width, height, options);
-      console.log('Generated SVG for:', patternType, 'length:', svgString.length);
-      // Encode SVG for preview using base64
-      const dataUrl = 'data:image/svg+xml;base64,' + btoa(svgString);
+      
+      // Get color from options
+      const color = options.color || '#E0E0E0';
+      const opacity = options.opacity || 0.8;
+      
+      // For previews, use simplified SVGs that are guaranteed to work
+      let svgContent;
+      
+      // Generate simple SVG based on pattern type
+      switch (patternType) {
+        case 'Grid':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 10 0 L 0 0 0 10" fill="none" stroke="${color}" stroke-width="0.5" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#grid)"/>
+          </svg>`;
+          break;
+          
+        case 'Dots':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="dots" width="10" height="10" patternUnits="userSpaceOnUse">
+              <circle cx="5" cy="5" r="1.5" fill="${color}" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#dots)"/>
+          </svg>`;
+          break;
+          
+        case 'Circles':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="circles" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="10" cy="10" r="5" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#circles)"/>
+          </svg>`;
+          break;
+          
+        case 'Lines':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="lines" width="10" height="10" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="5" x2="10" y2="5" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#lines)"/>
+          </svg>`;
+          break;
+          
+        case 'Waves':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="waves" width="20" height="10" patternUnits="userSpaceOnUse">
+              <path d="M 0 5 Q 5 0, 10 5 T 20 5" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#waves)"/>
+          </svg>`;
+          break;
+          
+        case 'Stars':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="stars" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M10,2 L12,8 L18,8 L13,12 L15,18 L10,14 L5,18 L7,12 L2,8 L8,8 Z" fill="${color}" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#stars)"/>
+          </svg>`;
+          break;
+          
+        case 'Crosses':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="crosses" width="15" height="15" patternUnits="userSpaceOnUse">
+              <path d="M5,2 L10,2 L10,5 L13,5 L13,10 L10,10 L10,13 L5,13 L5,10 L2,10 L2,5 L5,5 Z" fill="${color}" opacity="${opacity}" transform="translate(-1.5,-1.5)"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#crosses)"/>
+          </svg>`;
+          break;
+          
+        case 'TinyTriangles':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="triangles" width="15" height="15" patternUnits="userSpaceOnUse">
+              <polygon points="7.5,3 12,12 3,12" fill="${color}" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#triangles)"/>
+          </svg>`;
+          break;
+          
+        case 'HexagonGrid':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="hexagons" width="30" height="30" patternUnits="userSpaceOnUse">
+              <polygon points="15,5 25,12.5 21,25 9,25 5,12.5" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#hexagons)"/>
+          </svg>`;
+          break;
+          
+        case 'AbstractWaves':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="abstractWaves" width="40" height="20" patternUnits="userSpaceOnUse">
+              <path d="M0,10 Q10,5 20,15 T40,10" fill="none" stroke="${color}" stroke-width="1.5" opacity="${opacity}"/>
+              <path d="M0,15 Q10,20 20,5 T40,15" fill="none" stroke="${color}" stroke-width="1" opacity="${opacity*0.8}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#abstractWaves)"/>
+          </svg>`;
+          break;
+
+        case 'Snow':
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <pattern id="snow" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M10,5 V15 M5,10 H15 M7,7 L13,13 M13,7 L7,13" stroke="${color}" stroke-width="1" opacity="${opacity}"/>
+            </pattern>
+            <rect width="100%" height="100%" fill="url(#snow)"/>
+          </svg>`;
+          break;
+          
+        default:
+          // For all other patterns, create a simplified representation
+          svgContent = `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100%" height="100%" fill="#f8f8f8"/>
+            <text x="${width/2}" y="${height/2}" text-anchor="middle" font-size="10" fill="${color}">${patternType}</text>
+          </svg>`;
+      }
+      
+      // Create data URL with the SVG content
+      const dataUrl = 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svgContent);
+      
       // Post back to UI
       console.log('Sending preview for:', patternType);
       figma.ui.postMessage({ type: 'pattern-preview', patternType, dataUrl });
