@@ -122,7 +122,7 @@
     .customization-header {
       display: flex;
        align-items: center;
-      margin-bottom: 8px; /* Reduced margin */
+      margin-bottom: 16px;
        gap: 8px; /* Space between icon and text */
      }
     
@@ -140,7 +140,7 @@
     #selected-pattern-preview {
        display: flex;
        justify-content: center; /* Center the small preview */
-       margin-bottom: 8px; /* Reduced margin */
+       margin-bottom: 16px;
      }
      
     #selected-pattern-preview-img {
@@ -157,7 +157,7 @@
       color: var(--figma-color-text-secondary);
       cursor: pointer;
       font-size: 13px;
-      padding: 4px 0; /* Reduced vertical padding */
+      padding: 8px 0; /* Vertical padding */
       margin-bottom: 0; /* Removed gap between back button and header */
       display: flex;
       align-items: center;
@@ -172,7 +172,7 @@
     .controls-container {
       display: flex;
       flex-direction: column;
-      gap: 10px; /* Reduce gap between controls */
+      gap: 16px;
       flex: 1;
       overflow-y: hidden; /* Hide scroll during customization */
       padding-bottom: 10px; /* Space before footer */
@@ -180,7 +180,7 @@
 
     .control-group {
       display: grid;
-      grid-template-columns: 90px 1fr 40px; /* Fixed width for label and value */
+      grid-template-columns: auto 1fr auto; /* Label | Slider | Value */
       align-items: center;
       gap: 10px;
     }
@@ -188,21 +188,18 @@
     .control-group label {
       font-size: 13px;
       font-weight: 500;
-      white-space: nowrap;
-      text-align: left;
+       white-space: nowrap;
     }
 
     input[type="range"] {
       width: 100%;
       cursor: pointer;
       accent-color: var(--figma-color-bg-brand);
-      height: 5px;
-      background: var(--figma-color-border);
-      border-radius: 5px;
-      appearance: none; /* Override default look */
-      outline: none;
-      margin-left: 0; /* Ensure all sliders align left */
-      margin-right: 0;
+       height: 5px;
+       background: var(--figma-color-border);
+       border-radius: 5px;
+       appearance: none; /* Override default look */
+       outline: none;
     }
      /* Style the thumb */
      input[type="range"]::-webkit-slider-thumb {
@@ -254,19 +251,19 @@
      }
 
     /* Bottom Container / Footer */
-     .bottom-container {
+    .bottom-container {
        padding: 16px 20px;
        border-top: 1px solid var(--figma-color-border);
        background-color: var(--figma-color-bg); /* Ensure background */
        flex-shrink: 0; /* Prevent shrinking */
-     }
+    }
     
-     .button-group {
-       display: flex;
-       gap: 8px;
+    .button-group {
+      display: flex;
+      gap: 8px;
        margin-bottom: 12px;
-     }
-
+    }
+    
     button {
       flex-grow: 1;
       padding: 10px;
@@ -278,7 +275,7 @@
       transition: background-color 0.2s;
        text-align: center;
     }
-
+    
     button.primary {
       background-color: var(--figma-color-bg-brand);
       color: var(--figma-color-text-brand);
@@ -290,7 +287,7 @@
     button.primary:active {
       background-color: var(--figma-color-bg-brand-pressed);
     }
-
+    
     button.secondary {
       background-color: var(--figma-color-bg-hover);
       color: var(--figma-color-text);
@@ -333,7 +330,7 @@
         <!-- Pattern items will be dynamically added here -->
       </div>
     </div>
-
+    
     <!-- Customization View (Initially Hidden) -->
     <div id="customization-controls">
       <div id="selected-pattern-preview">
@@ -368,9 +365,9 @@
           <span></span> <!-- Empty span for alignment -->
         </div>
         <!-- Add more controls as needed -->
-      </div>
     </div>
-
+  </div>
+  
   </div>
 
   <!-- Fixed Footer Area -->
@@ -452,14 +449,13 @@
       { type: 'BeanShapes', name: 'Bean Shapes' },
       { type: 'CornerDots', name: 'Corner Dots' },
       { type: 'TriangleStack', name: 'Triangle Stack' },
+      { type: 'HalfDiamonds', name: 'Half Diamonds' },
       { type: 'RoundedSquares', name: 'Rounded Squares' },
       { type: 'PetalShapes', name: 'Petal Shapes' },
       { type: 'AngledChevrons', name: 'Angled Chevrons' },
       { type: 'EllipseLines', name: 'Ellipse Lines' },
       { type: 'DashedCircles', name: 'Dashed Circles' },
       { type: 'TornPaperEdge', name: 'Torn Paper Edge' },
-      { type: 'SwirlVortex', name: 'Swirl Vortex' },
-      { type: 'StreamLines', name: 'Stream Lines' },
       { type: 'SpiralLoops', name: 'Spiral Loops' },
       { type: 'ArrowRepeat', name: 'Arrow Repeat' },
       { type: 'CornerCutShapes', name: 'Corner Cut Shapes' },
@@ -511,28 +507,26 @@
         // Process options
         const color = options.color || '#E0E0E0';
         const opacity = options.opacity !== undefined ? options.opacity : 0.8;
-        const scaleFactor = options.scaleFactor || 1;
-        const spacingFactor = options.spacingFactor || 1;
         
-        const svgStart = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
-        const svgEnd = '</svg>';
+      const svgStart = `<svg width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" xmlns="http://www.w3.org/2000/svg">`;
+      const svgEnd = '</svg>';
         let pattern = ''; // No default background
-        
+      
         // Basic previews - you might want to enhance these
-        switch (patternType) {
-          case 'Grid':
-            pattern = `
+      switch (patternType) {
+        case 'Grid':
+          pattern = `
               <g stroke="${color}" stroke-width="1" opacity="${opacity}">
-                ${Array.from({ length: 3 }, (_, i) => `<line x1="${(i+1)*width/4 * spacingFactor}" y1="0" x2="${(i+1)*width/4 * spacingFactor}" y2="${height}"/>`).join('')}
-                ${Array.from({ length: 2 }, (_, i) => `<line x1="0" y1="${(i+1)*height/3 * spacingFactor}" x2="${width}" y2="${(i+1)*height/3 * spacingFactor}"/>`).join('')}
+                ${Array.from({ length: 3 }, (_, i) => `<line x1="${(i+1)*width/4}" y1="0" x2="${(i+1)*width/4}" y2="${height}"/>`).join('')}
+                ${Array.from({ length: 2 }, (_, i) => `<line x1="0" y1="${(i+1)*height/3}" x2="${width}" y2="${(i+1)*height/3}"/>`).join('')}
                 </g>`;
           break;
-          case 'Dots':
+        case 'Dots':
             pattern = `<g fill="${color}" opacity="${opacity}">`;
-            for(let i=0; i<5; i++) { for(let j=0; j<4; j++) { pattern += `<circle cx="${(i+0.5)*width/5 * spacingFactor}" cy="${(j+0.5)*height/4 * spacingFactor}" r="${2 * scaleFactor}"/>`; } }
+            for(let i=0; i<5; i++) { for(let j=0; j<4; j++) { pattern += `<circle cx="${(i+0.5)*width/5}" cy="${(j+0.5)*height/4}" r="2"/>`; } }
             pattern += `</g>`;
           break;
-          case 'Circles':
+        case 'Circles':
             pattern = `<g fill="${color}" opacity="${opacity}">`;
              for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
                 const cx = (i+0.5)*width/2; const cy = (j+0.5)*height/2;
@@ -541,7 +535,7 @@
              }}
              pattern += `</g>`;
           break;
-           case 'Waves':
+        case 'Waves':
              pattern = `<g stroke="${color}" stroke-width="2" fill="none" opacity="${opacity}">`;
              for (let i = 0; i < 2; i++) {
                const y = (i + 0.5) * height / 2;
@@ -549,21 +543,21 @@
              }
              pattern += `</g>`;
           break;
-           case 'Lines':
+        case 'Lines':
              pattern = `<g stroke="${color}" stroke-width="1" opacity="${opacity}">`;
              for (let i = -3; i < 5; i++) {
                  pattern += `<line x1="${i*width/4}" y1="0" x2="${i*width/4 + height}" y2="${height}"/>`;
              }
              pattern += `</g>`;
           break;
-          case 'AbstractWaves':
+        case 'AbstractWaves':
              pattern = `<g fill="${color}" opacity="${opacity}">`;
              for(let i = 0; i < 3; i++) {
                 pattern += `<rect x="-10" y="${(i+0.3)*height/3}" width="${width+20}" height="3" transform="rotate(${Math.sin(i*1.5)*5} ${width/2} ${ (i+0.5)*height/3})"/>`;
              }
              pattern += `</g>`;
           break;
-           case 'Snow':
+        case 'Snow':
              pattern = `<g fill="${color}" opacity="${opacity}">`;
              for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
                  const x = (i+0.5)*width/3; const y = (j+0.5)*height/2;
@@ -572,7 +566,7 @@
              }}
              pattern += `</g>`;
           break;
-           case 'Stars':
+        case 'Stars':
              pattern = `<g stroke="${color}" stroke-width="1" opacity="${opacity}">`;
              for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
                 const x = (i+0.5)*width/3; const y = (j+0.5)*height/2;
@@ -633,18 +627,18 @@
             pattern += `</g>`;
           break;
          // --- End Add simplified previews ---
-         
+          
          // --- Add more pattern previews for thumbnails ---
-         case 'TinyTriangles':
+        case 'TinyTriangles':
            pattern = `<g fill="${color}" opacity="${opacity}">`;
            for(let i=0; i<4; i++) { for(let j=0; j<3; j++) {
              const x = (i+0.5)*width/4; const y = (j+0.5)*height/3;
              pattern += `<polygon points="${x},${y-3} ${x+3},${y+2} ${x-3},${y+2}" />`;
            }}
            pattern += `</g>`;
-           break;
-           
-         case 'CircleScatter':
+          break;
+          
+        case 'CircleScatter':
            pattern = `<g fill="${color}" opacity="${opacity}">`;
            for(let i=0; i<5; i++) {
              const x = 10 + Math.random() * (width-20);
@@ -653,10 +647,10 @@
              pattern += `<circle cx="${x}" cy="${y}" r="${r}" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'HexGrid':
-         case 'HexagonGrid':
+        case 'HexagonGrid':
            pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
            const hexSize = 12;
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
@@ -665,9 +659,9 @@
              pattern += `<polygon points="${x},${y-hexSize} ${x+hexSize*0.866},${y-hexSize*0.5} ${x+hexSize*0.866},${y+hexSize*0.5} ${x},${y+hexSize} ${x-hexSize*0.866},${y+hexSize*0.5} ${x-hexSize*0.866},${y-hexSize*0.5}" />`;
            }}
            pattern += `</g>`;
-           break;
-           
-         case 'Chevrons':
+          break;
+          
+        case 'Chevrons':
            pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
            for(let i=0; i<3; i++) {
              const y = i * height/3 + height/6;
@@ -675,8 +669,8 @@
            }
            pattern += `</g>`;
            break;
-           
-         case 'SquareTiles':
+          
+        case 'SquareTiles':
            pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
            const sqSize = 15;
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
@@ -685,18 +679,18 @@
              pattern += `<rect x="${x-sqSize/2}" y="${y-sqSize/2}" width="${sqSize}" height="${sqSize}" />`;
            }}
            pattern += `</g>`;
-           break;
-           
-         case 'WaveDots':
+          break;
+          
+        case 'WaveDots':
            pattern = `<g fill="${color}" opacity="${opacity}">`;
            for(let i=0; i<width; i+=width/8) {
              const y = height/2 + Math.sin(i/10) * 10;
              pattern += `<circle cx="${i}" cy="${y}" r="2" />`;
            }
            pattern += `</g>`;
-           break;
-           
-         case 'ConcentricCircles':
+          break;
+          
+        case 'ConcentricCircles':
            pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
            const centerX = width/2;
            const centerY = height/2;
@@ -704,9 +698,9 @@
              pattern += `<circle cx="${centerX}" cy="${centerY}" r="${r}" />`;
            }
            pattern += `</g>`;
-           break;
-           
-         case 'ThinXMarks':
+          break;
+          
+        case 'ThinXMarks':
            pattern = `<g stroke="${color}" stroke-width="0.8" opacity="${opacity}">`;
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
              const x = (i+0.5)*width/3; 
@@ -715,9 +709,9 @@
              pattern += `<line x1="${x-5}" y1="${y+5}" x2="${x+5}" y2="${y-5}" />`;
            }}
            pattern += `</g>`;
-           break;
-           
-         case 'OvalGrid':
+          break;
+          
+        case 'OvalGrid':
            pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
              const x = (i+0.5)*width/3; 
@@ -729,18 +723,18 @@
              }
            }}
            pattern += `</g>`;
-           break;
-           
-         case 'AngledLines':
+          break;
+          
+        case 'AngledLines':
            pattern = `<g stroke="#D0D0D0">`;
            for(let i=0; i<4; i++) {
              const offset = i * width/4;
              pattern += `<line x1="${offset}" y1="0" x2="${offset+width/4}" y2="${height}" />`;
            }
            pattern += `</g>`;
-           break;
-           
-         case 'SpiralDots':
+          break;
+          
+        case 'SpiralDots':
            pattern = `<g fill="${color}" opacity="${opacity}">`;
            const centerX2 = width/2;
            const centerY2 = height/2;
@@ -752,18 +746,18 @@
              pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
            }
            pattern += `</g>`;
-           break;
-           
-         case 'DashedLines':
+          break;
+          
+        case 'DashedLines':
            pattern = `<g stroke="#D0D0D0" stroke-dasharray="4,4">`;
            for(let i=1; i<4; i++) {
              const y = i * height/4;
              pattern += `<line x1="0" y1="${y}" x2="${width}" y2="${y}" />`;
            }
            pattern += `</g>`;
-           break;
-           
-         case 'ScatteredSquares':
+          break;
+          
+        case 'ScatteredSquares':
            pattern = `<g fill="${color}" opacity="${opacity}">`;
            for(let i=0; i<6; i++) {
              const x = 10 + Math.random() * (width-20);
@@ -772,27 +766,18 @@
              pattern += `<rect x="${x-size/2}" y="${y-size/2}" width="${size}" height="${size}" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'HalfDiamonds':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
+           pattern = `<g stroke="#D0D0D0" fill="none">`;
            for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = 8 * scaleFactor;
-             
-             // Create a true half diamond using clip-path
-             if ((i+j) % 2 === 0) {
-               // Top half
-               pattern += `<path d="M${x-size},${y} L${x},${y-size} L${x+size},${y} L${x},${y+size} Z" clip-path="polygon(0% 0%, 100% 0%, 100% 50%, 0% 50%)" />`;
-             } else {
-               // Bottom half
-               pattern += `<path d="M${x-size},${y} L${x},${y-size} L${x+size},${y} L${x},${y+size} Z" clip-path="polygon(0% 50%, 100% 50%, 100% 100%, 0% 100%)" />`;
-             }
+             const x = (i+0.5)*width/3; 
+             const y = (j+0.5)*height/2;
+             pattern += `<path d="M${x},${y-8} L${x+8},${y} L${x},${y+8} Z" />`;
            }}
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          // Additional patterns from the new list
          case 'GrainNoise':
            pattern = `<g fill="#D0D0D0" opacity="0.6">`;
@@ -802,8 +787,8 @@
              pattern += `<rect x="${x}" y="${y}" width="1" height="1" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'StaticTVDots':
            pattern = `<g fill="#D0D0D0">`;
            for(let i=0; i<100; i++) {
@@ -813,8 +798,8 @@
              pattern += `<circle cx="${x}" cy="${y}" r="1" opacity="${opacity}" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'SpeckledInk':
            pattern = `<g fill="#D0D0D0">`;
            for(let i=0; i<40; i++) {
@@ -824,8 +809,8 @@
              pattern += `<circle cx="${x}" cy="${y}" r="${size}" opacity="0.7" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'DustFlecks':
            pattern = `<g fill="#D0D0D0">`;
            for(let i=0; i<30; i++) {
@@ -835,8 +820,8 @@
              pattern += `<circle cx="${x}" cy="${y}" r="${size}" opacity="0.6" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'CrinkleLines':
          case 'PaperCrinkleLines':
            pattern = `<g stroke="#D0D0D0" fill="none">`;
@@ -850,35 +835,40 @@
              pattern += path;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'SwirlVortex':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
+           pattern = `<g stroke="#D0D0D0" fill="none">`;
            const cx = width/2, cy = height/2;
            for(let i=0; i<4; i++) {
-             const r = (5 + i*5) * scaleFactor;
-             pattern += `<path d="M${cx-r},${cy} A${r},${r} 0 1,1 ${cx+r},${cy} A${r},${r} 0 1,0 ${cx-r},${cy}" />`;
+             const r = 5 + i*8;
+             pattern += `<path d="M${cx-r},${cy} A${r},${r} 0 1,1 ${cx+r},${cy}" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'TiltedStripes':
            pattern = `<g stroke="#D0D0D0" stroke-width="1.5">`;
            for(let i=-2; i<6; i++) {
              pattern += `<line x1="${i*15}" y1="0" x2="${i*15+width/2}" y2="${height}" />`;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'StreamLines':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i * height/3 + height/6;
-             pattern += `<path d="M0,${y} C${width*0.25},${y-8*scaleFactor} ${width*0.5},${y+8*scaleFactor} ${width*0.75},${y-8*scaleFactor} S${width},${y} ${width},${y}" />`;
+           pattern = `<g stroke="#D0D0D0" fill="none">`;
+           for(let i=0; i<5; i++) {
+             let path = `<path d="M0,${i*height/5+height/10} `;
+             for(let x=width/4; x<width; x+=width/4) {
+               const offset = Math.sin(x/width*Math.PI) * 8;
+               path += `Q${x-width/8},${i*height/5+height/10+offset} ${x},${i*height/5+height/10} `;
+             }
+             path += `" />`;
+             pattern += path;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'SineWaves':
            pattern = `<g stroke="#D0D0D0" fill="none">`;
            for(let i=0; i<3; i++) {
@@ -891,8 +881,8 @@
              pattern += path;
            }
            pattern += `</g>`;
-           break;
-           
+          break;
+          
          case 'ExpandingCircles':
            pattern = `<g stroke="#D0D0D0" fill="none">`;
            const cxExp = width/2, cyExp = height/2;
@@ -900,468 +890,13 @@
              pattern += `<circle cx="${cxExp}" cy="${cyExp}" r="${i*12}" />`;
            }
            pattern += `</g>`;
-           break;
-
-         case 'TinyMoons':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = scaleFactor * 5;
-             pattern += `<path d="M${x-2*scaleFactor},${y-size} A ${size},${size} 0 0 1 ${x-2*scaleFactor},${y+size} A ${size/2},${size} 0 0 0 ${x-2*scaleFactor},${y-size}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'Arrowheads':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = scaleFactor * 5;
-             pattern += `<polygon points="${x+size},${y} ${x-size*0.6},${y-size} ${x-size*0.6},${y+size}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'BlockDots':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = scaleFactor * 3;
-             pattern += `<rect x="${x-size}" y="${y-size}" width="${size*2}" height="${size*2}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'ThinBars':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const width = scaleFactor * 10;
-             const height = scaleFactor * 2;
-             pattern += `<rect x="${x-width/2}" y="${y-height/2}" width="${width}" height="${height}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'CirclesOnSticks':
-           pattern = `<g fill="${color}" stroke="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const radius = scaleFactor * 3;
-             const stickLength = scaleFactor * 10;
-             pattern += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y+stickLength}" stroke-width="${1.5*scaleFactor}" />`;
-             pattern += `<circle cx="${x}" cy="${y-radius}" r="${radius}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'NestedTriangles':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size1 = scaleFactor * 10;
-             const size2 = scaleFactor * 5;
-             pattern += `<polygon points="${x},${y-size1} ${x+size1*0.866},${y+size1/2} ${x-size1*0.866},${y+size1/2}" />`;
-             pattern += `<polygon points="${x},${y-size2} ${x+size2*0.866},${y+size2/2} ${x-size2*0.866},${y+size2/2}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'DotRingCombo':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const dotSize = scaleFactor * 2;
-             const ringSize = scaleFactor * 6;
-             pattern += `<circle cx="${x}" cy="${y}" r="${dotSize}" />`;
-             pattern += `<circle cx="${x}" cy="${y}" r="${ringSize}" fill="none" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'ArchRows':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) {
-             const y = (i+0.5)*height/2 * spacingFactor;
-             for(let j=0; j<3; j++) {
-               const x = j*width/3 + width/6;
-               const archWidth = 10 * scaleFactor;
-               pattern += `<path d="M${x-archWidth},${y+5*scaleFactor} A ${archWidth},${archWidth} 0 0 1 ${x+archWidth},${y+5*scaleFactor}" />`;
-             }
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'CircleSlices':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = 10 * scaleFactor;
-             pattern += `<path d="M${x},${y} L${x+size*0.8},${y-size*0.8} A ${size},${size} 0 0 1 ${x+size*0.8},${y+size*0.8} Z" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'DotsInCircle':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const ringSize = 8 * scaleFactor;
-             pattern += `<circle cx="${x}" cy="${y}" r="${ringSize}" fill="none" />`;
-             // Add 3 dots inside circle
-             for(let k=0; k<3; k++) {
-               const angle = k * Math.PI * 2 / 3;
-               const dotX = x + Math.cos(angle) * ringSize * 0.5;
-               const dotY = y + Math.sin(angle) * ringSize * 0.5;
-               pattern += `<circle cx="${dotX}" cy="${dotY}" r="${1.5 * scaleFactor}" />`;
-             }
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'HalfCircles':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = 5 * scaleFactor;
-             const rotation = ((i+j) % 4) * 90;
-             pattern += `<path d="M${x-size},${y} A ${size},${size} 0 0 1 ${x+size},${y}" transform="rotate(${rotation} ${x} ${y})" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'DiamondGrid':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             const size = 5 * scaleFactor;
-             pattern += `<rect x="${x-size}" y="${y-size}" width="${size*2}" height="${size*2}" transform="rotate(45 ${x} ${y})" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'ThinRings':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3 * spacingFactor; 
-             const y = (j+0.5)*height/2 * spacingFactor;
-             pattern += `<circle cx="${x}" cy="${y}" r="${5 * scaleFactor}" stroke-width="${0.8 * scaleFactor}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'ZigzagLines':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i*height/3 + height/6;
-             const amplitude = 5 * scaleFactor;
-             pattern += `<polyline points="0,${y} ${width/4},${y-amplitude} ${width/2},${y+amplitude} ${width*3/4},${y-amplitude} ${width},${y}" />`;
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'NestedSquares':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             pattern += `<rect x="${x-8}" y="${y-8}" width="16" height="16" />`;
-             pattern += `<rect x="${x-4}" y="${y-4}" width="8" height="8" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'CornerBrackets':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             // Draw 4 brackets
-             pattern += `<path d="M${x-5},${y-3} L${x-5},${y-5} L${x-3},${y-5}" />`;
-             pattern += `<path d="M${x+3},${y-5} L${x+5},${y-5} L${x+5},${y-3}" />`;
-             pattern += `<path d="M${x+5},${y+3} L${x+5},${y+5} L${x+3},${y+5}" />`;
-             pattern += `<path d="M${x-3},${y+5} L${x-5},${y+5} L${x-5},${y+3}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'TinyHearts':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<path d="M${x},${y+3} L${x-4},${y-2} A 3,3 0 0 1 ${x},${y-4} A 3,3 0 0 1 ${x+4},${y-2} Z" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'DotDashCombo':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i*height/3 + height/6;
-             for(let j=0; j<4; j++) {
-               const x = j*width/4 + width/8;
-               if(j % 2 === 0) {
-                 pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
-               } else {
-                 pattern += `<line x1="${x-5}" y1="${y}" x2="${x+5}" y2="${y}" />`;
-               }
-             }
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'TinyRectangles':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<4; i++) { for(let j=0; j<3; j++) {
-             const x = (i+0.5)*width/4; 
-             const y = (j+0.5)*height/3;
-             pattern += `<rect x="${x-3}" y="${y-2}" width="6" height="4" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'OffsetGrid':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<4; i++) { 
-             const offset = (i % 2) * width/8;
-             const y = i*height/4 + height/8;
-             for(let j=0; j<3; j++) {
-               const x = j*width/3 + width/6 + offset;
-               pattern += `<circle cx="${x}" cy="${y}" r="4" />`;
-             }
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'BeanShapes':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             const rotation = ((i+j) % 4) * 90;
-             pattern += `<path d="M${x},${y-5} C${x+5},${y-5} ${x+5},${y+5} ${x},${y+5} C${x-5},${y+5} ${x-5},${y-5} ${x},${y-5} Z" transform="rotate(${rotation} ${x} ${y})" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'CornerDots':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           // Dots at corners of squares
-           for(let i=0; i<4; i++) {
-             for(let j=0; j<3; j++) {
-               const x = i*width/3;
-               const y = j*height/2;
-               pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
-             }
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'TriangleStack':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             pattern += `<polygon points="${x},${y-8} ${x+6},${y+4} ${x-6},${y+4}" fill-opacity="0.3" />`;
-             pattern += `<polygon points="${x},${y-4} ${x+4},${y+3} ${x-4},${y+3}" fill-opacity="0.6" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'RoundedSquares':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             pattern += `<rect x="${x-6}" y="${y-6}" width="12" height="12" rx="3" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'PetalShapes':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             for(let k=0; k<4; k++) {
-               const angle = k * Math.PI / 2;
-               const px = x + Math.cos(angle) * 5;
-               const py = y + Math.sin(angle) * 5;
-               pattern += `<circle cx="${px}" cy="${py}" r="4" />`;
-             }
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'AngledChevrons':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             const rotation = (i+j) % 2 === 0 ? 30 : -30;
-             pattern += `<polyline points="${x-6},${y-3} ${x},${y+3} ${x+6},${y-3}" transform="rotate(${rotation} ${x} ${y})" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'EllipseLines':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             if((i+j) % 2 === 0) {
-               // Horizontal ellipse
-               pattern += `<ellipse cx="${x}" cy="${y}" rx="7" ry="3" />`;
-             } else {
-               // Vertical ellipse
-               pattern += `<ellipse cx="${x}" cy="${y}" rx="3" ry="7" />`;
-             }
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'DashedCircles':
-           pattern = `<g stroke="${color}" fill="none" stroke-dasharray="2,2" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             pattern += `<circle cx="${x}" cy="${y}" r="10" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'TornPaperEdge':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=1; i<4; i++) {
-             const y = i * height/4;
-             let points = `M0,${y}`;
-             for(let x=0; x<width; x+=width/10) {
-               const jitter = (Math.random() - 0.5) * 4;
-               points += ` L${x},${y+jitter}`;
-             }
-             pattern += `<path d="${points}" />`;
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'SpiralLoops':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             pattern += `<path d="M${x},${y} Q${x+10},${y-10} ${x},${y-5} T${x-5},${y-2} T${x},${y}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'ArrowRepeat':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/3; 
-             const y = (j+0.5)*height/2;
-             const rotation = ((i+j) % 4) * 90;
-             pattern += `<polygon points="${x},${y-5} ${x+4},${y-1} ${x+1},${y-1} ${x+1},${y+3} ${x-1},${y+3} ${x-1},${y-1} ${x-4},${y-1}" transform="rotate(${rotation} ${x} ${y})" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'CornerCutShapes':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             pattern += `<path d="M${x-6},${y-3} L${x-6},${y-6} L${x-3},${y-6} L${x+3},${y-6} L${x+6},${y-6} L${x+6},${y-3} L${x+6},${y+3} L${x+6},${y+6} L${x+3},${y+6} L${x-3},${y+6} L${x-6},${y+6} L${x-6},${y+3} Z" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'StepPattern':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i*height/3 + height/6;
-             let points = `M0,${y}`;
-             for(let j=0; j<5; j++) {
-               const x = j*width/5;
-               const step = (j%2===0) ? 5 : -5;
-               points += ` L${x},${y} L${x},${y+step}`;
-             }
-             points += ` L${width},${y}`;
-             pattern += `<path d="${points}" />`;
-           }
-           pattern += `</g>`;
-           break;
-           
-         case 'RippleDots':
-           pattern = `<g fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             // Main dot
-             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
-             // Ripple circles
-             for(let r=5; r<=15; r+=5) {
-               pattern += `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${color}" stroke-width="0.8" stroke-opacity="${0.7 - r/25}" />`;
-             }
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'HexRing':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             const size = 8;
-             pattern += `<polygon points="${x},${y-size} ${x+size*0.866},${y-size*0.5} ${x+size*0.866},${y+size*0.5} ${x},${y+size} ${x-size*0.866},${y+size*0.5} ${x-size*0.866},${y-size*0.5}" />`;
-             pattern += `<circle cx="${x}" cy="${y}" r="3" fill="${color}" />`;
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'FlowerGrid':
-           pattern = `<g stroke="${color}" fill="${color}" opacity="${opacity}">`;
-           for(let i=0; i<2; i++) { for(let j=0; j<2; j++) {
-             const x = (i+0.5)*width/2; 
-             const y = (j+0.5)*height/2;
-             // Center dot
-             pattern += `<circle cx="${x}" cy="${y}" r="2" />`;
-             // Petals
-             for(let k=0; k<6; k++) {
-               const angle = k * Math.PI / 3;
-               const px = x + Math.cos(angle) * 6;
-               const py = y + Math.sin(angle) * 6;
-               pattern += `<circle cx="${px}" cy="${py}" r="3" opacity="0.6" />`;
-             }
-           }}
-           pattern += `</g>`;
-           break;
-           
-         case 'TwistRibbons':
-           pattern = `<g stroke="${color}" fill="none" opacity="${opacity}">`;
-           for(let i=0; i<3; i++) {
-             const y = i*height/3 + height/6;
-             pattern += `<path d="M0,${y} C${width*0.2},${y-8} ${width*0.4},${y+8} ${width*0.6},${y-8} S${width*0.8},${y+8} ${width},${y}" />`;
-           }
-           pattern += `</g>`;
-           break;
-           
+          break;
+          
          // ... existing code for default case ...
           default:
             // Fallback simple preview
              pattern += `<text x="10" y="${height/2 + 4}" font-size="10" fill="#999">${patternType}</text>`;
-            break;
+          break;
         }
         
         const fullSVG = svgStart + pattern + svgEnd;
@@ -1398,6 +933,8 @@
       });
 
       patternsGrid.appendChild(patternItem);
+      // Request full SVG preview from plugin
+      parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType: p.type, width: 80, height: 60 } }, '*');
     });
     
     // Function to switch to customization view
@@ -1414,19 +951,17 @@
        // Store current pattern type
        currentPatternType = patternType;
        
-       // Update the small preview image
-       selectedPatternPreviewImg.src = generatePreviewSVG(patternType, 80, 80); // Generate slightly larger preview
+       // Request full SVG preview for customization
+       parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType, width: 80, height: 80, options: {
+         density: parseInt(densitySlider.value,10), size: parseInt(sizeSlider.value,10), opacity: parseInt(opacitySlider.value,10)/100, color: colorPicker.value
+       } } }, '*');
        
-       // TODO: Add logic here to show/hide/set ranges for controls based on patternType
-       // For now, all controls are visible. Reset to defaults.
+       // Reset controls to defaults
        densitySlider.value = 50; densityValue.textContent = '50';
        sizeSlider.value = 50; sizeValue.textContent = '50';
        opacitySlider.value = 80; opacityValue.textContent = '80%';
        colorPicker.value = '#E0E0E0';
 
-       // Optionally focus the first control
-       // densitySlider.focus(); - Causes aria-hidden issue if called immediately before hide
-       
        // Set preview update function for initial preview and setup
        updateLivePreview();
     }
@@ -1438,31 +973,10 @@
     // Function to update live preview based on current slider values
     function updateLivePreview() {
       if (!currentPatternType) return;
-      
-      // Get current values
-      const density = parseInt(densitySlider.value, 10);
-      const size = parseInt(sizeSlider.value, 10);
-      const opacity = parseInt(opacitySlider.value, 10) / 100;
-      const color = colorPicker.value;
-      
-      // Calculate derived values for preview
-      const scaleFactor = size / 50; // Convert slider (1-100) to scale factor (0.02-2)
-      const spacingFactor = 100 / density; // Inverse relationship - higher density = smaller spacing
-      
-      // Update preview with custom options
-      selectedPatternPreviewImg.src = generatePreviewSVG(
-        currentPatternType, 
-        80, 
-        80, 
-        { 
-          density: density,
-          size: size,
-          opacity: opacity,
-          color: color,
-          scaleFactor: scaleFactor,
-          spacingFactor: spacingFactor
-        }
-      );
+      // Send request for full SVG preview
+      parent.postMessage({ pluginMessage: { type: 'preview-pattern', patternType: currentPatternType, width: 80, height: 80, options: {
+        density: parseInt(densitySlider.value,10), size: parseInt(sizeSlider.value,10), opacity: parseInt(opacitySlider.value,10)/100, color: colorPicker.value
+      } } }, '*');
     }
     
     densitySlider.addEventListener('input', (e) => {
@@ -1532,6 +1046,21 @@
     cancelButton.addEventListener('click', () => {
       parent.postMessage({ pluginMessage: { type: 'cancel' } }, '*');
     });
+
+    // Listen for generated SVG previews from plugin
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'pattern-preview') {
+        const { patternType, dataUrl } = msg;
+        // Update grid thumbnail
+        const thumb = document.querySelector(`.pattern-item[data-type="${patternType}"] img`);
+        if (thumb) thumb.src = dataUrl;
+        // Update customization preview if open
+        if (currentPatternType === patternType && selectedPatternPreviewImg) {
+          selectedPatternPreviewImg.src = dataUrl;
+        }
+      }
+    };
 
   </script>
 </body>
