@@ -8,15 +8,24 @@ figma.ui.onmessage = async (msg) => {
   // Handle live preview requests
   if (msg.type === 'preview-pattern') {
     try {
+      console.log('Preview request received for:', msg.patternType);
       const { patternType, width, height, options = {} } = msg;
       // Generate full SVG string using existing logic
       const svgString = generateSVG(patternType, width, height, options);
-      // Encode to base64 data URL
+      console.log('Generated SVG for:', patternType, 'length:', svgString.length);
+      // Encode SVG for preview using base64
       const dataUrl = 'data:image/svg+xml;base64,' + btoa(svgString);
       // Post back to UI
+      console.log('Sending preview for:', patternType);
       figma.ui.postMessage({ type: 'pattern-preview', patternType, dataUrl });
     } catch (err) {
-      console.error('Error generating SVG preview:', err);
+      console.error('Error generating SVG preview for', msg.patternType, err);
+      // Send error message to UI so it knows something failed
+      figma.ui.postMessage({ 
+        type: 'pattern-preview-error', 
+        patternType: msg.patternType, 
+        error: err.message 
+      });
     }
     return;
   }
